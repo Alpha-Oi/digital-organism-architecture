@@ -18,20 +18,19 @@
 | Whitespace integrity | PASS | `git diff --check` |
 | License and changelog | PASS | Apache-2.0 and `CHANGELOG.md` present |
 | Governance and conformance process | PASS | `GOVERNANCE.md`, `CONTRIBUTING.md`, claim template |
-| Remote GitHub Actions run | NOT_RUN | workflow must run after publication |
+| Remote GitHub Actions run | PASS | [`Validate DOA standard #2`](https://github.com/Alpha-Oi/digital-organism-architecture/actions/runs/36592512167), commit `dde046d78dbd5bad058040b35c35cf619ea0d912` |
 | `main` branch protection | NOT_CONFIGURED | external repository setting |
 | Owner approval for tag/release | PENDING | tag and GitHub Release require explicit decision |
 
 ## Blocking before `v1.0.0`
 
-1. Опубликовать validation workflow и получить успешный remote run.
-2. Принять решение по защите `main` и required status check.
-3. Получить явное разрешение владельца на tag `v1.0.0` и GitHub Release.
+1. Принять решение по защите `main` и required status check `validate`.
+2. Получить явное разрешение владельца на tag `v1.0.0` и GitHub Release.
 
 ## Accepted risks
 
 - Внешняя peer review биологических соответствий ещё не проведена; это не скрывается и не заменяется self-review.
-- GitHub Actions используют поддерживаемые major tags `actions/checkout@v4` и `actions/setup-python@v5`, а не immutable commit SHA. Workflow ограничен `contents: read`.
+- GitHub Actions используют Node.js 24-совместимые major tags `actions/checkout@v5` и `actions/setup-python@v6`, а не immutable commit SHA. Workflow ограничен `contents: read`.
 - DOA v1.0 определяет contracts и conformance evidence, но пока не имеет опубликованного claim от независимой реализации.
 
 ## Not applicable
