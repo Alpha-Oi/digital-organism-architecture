@@ -2,6 +2,16 @@
 
 Все существенные изменения стандарта документируются здесь.
 
+## [Unreleased]
+
+### Added
+
+- governance, contribution и security policies;
+- conformance claim template;
+- reproducible repository validator;
+- read-only GitHub Actions validation workflow;
+- CODEOWNERS, pull request и standard-gap templates.
+
 ## [1.0.0] - 2026-09-29
 
 ### Added

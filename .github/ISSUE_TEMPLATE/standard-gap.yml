@@ -1,0 +1,34 @@
+name: Standard gap
+description: Предложить недостающий механизм или уточнение DOA
+title: "[Gap]: "
+labels:
+  - standard-gap
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Concrete scenario
+      description: Кто что делает и какой наблюдаемый результат требуется?
+    validations:
+      required: true
+  - type: textarea
+    id: gap
+    attributes:
+      label: Current gap
+      description: Какой раздел, contract или mechanism отсутствует либо неоднозначен?
+    validations:
+      required: true
+  - type: textarea
+    id: mapping
+    attributes:
+      label: Proposed Biology-to-IT mapping
+      description: Responsibility, contract, protocol, invariant, failures, security и возможный stack.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and sources
+      description: Primary sources, implementation evidence и известные ограничения.
+    validations:
+      required: true

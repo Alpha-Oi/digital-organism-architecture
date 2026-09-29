@@ -41,6 +41,19 @@ DOA не является приложением, agent framework, control plane
 - `docs/ROBOTICS_EXTENSION.md` — физическая безопасность и real-time профиль;
 - `CHANGES_AND_NEW_FINDINGS.md` — отличия от исходного draft и новые находки.
 
+## Проверка и соответствие
+
+Локальная проверка канонической структуры, schemas, example genome, ссылок и диаграмм:
+
+```bash
+python -m pip install -r requirements-validation.txt
+python scripts/validate_repository.py
+```
+
+Реализация DOA публикует отдельный claim по шаблону `templates/DOA_CONFORMANCE_CLAIM.md`. Наличие термина DOA в документации без evidence pack не означает соответствие.
+
+Правила изменений определены в `CONTRIBUTING.md`, модель принятия решений — в `GOVERNANCE.md`, порядок сообщения об уязвимостях — в `SECURITY.md`.
+
 ## Нормативный язык
 
 Ключевые слова **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** и **MAY** используются в смысле RFC 2119/RFC 8174. Биологическая аналогия сама по себе не создаёт соответствия DOA: нужен исполняемый или проверяемый цифровой механизм.
