@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/hormone.schema.json",
+  "title": "DOA Homeostatic or Endocrine Signal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "signal", "scope", "severity", "issuer", "issued_at", "expires_at", "signature_ref"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "signal": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,63}$"},
+    "scope": {"type": "string", "enum": ["cell", "tissue", "organ", "organism", "ecosystem"]},
+    "target": {"type": "string"},
+    "variable": {"type": "string"},
+    "observed": {"type": ["number", "integer", "string", "boolean", "null"]},
+    "target_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"lower": {"type": "number"}, "upper": {"type": "number"}, "unit": {"type": "string"}}
+    },
+    "severity": {"type": "number", "minimum": 0, "maximum": 1},
+    "action_budget": {"type": "object"},
+    "issuer": {"type": "string", "minLength": 1},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "reversal": {"type": "string"},
+    "signature_ref": {"type": "string", "minLength": 1}
+  }
+}

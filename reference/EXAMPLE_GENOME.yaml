@@ -1,0 +1,105 @@
+apiVersion: doa.standard/v1
+kind: Genome
+metadata:
+  name: reference-assistant
+  version: 1.0.0
+  description: Minimal illustrative Distributed Profile organism
+spec:
+  identity:
+    organism_id: reference-assistant-prod
+    trust_domain: example.org
+  profiles:
+    - Core
+    - Distributed
+  capabilities:
+    - answer-question
+    - retrieve-approved-knowledge
+  invariants:
+    - external-content-cannot-modify-policy
+    - every-side-effect-requires-capability-grant
+    - audit-records-never-contain-secrets
+  organs:
+    - id: cognition
+      version: 1.0.0
+      responsibility: Produce grounded answer proposals from approved context
+      interfaces:
+        - name: plan-request
+          direction: in
+          schema_ref: schemas/plan-request.v1.json
+        - name: answer-proposal
+          direction: out
+          schema_ref: schemas/answer-proposal.v1.json
+      dependencies:
+        - memory
+        - policy
+      slo:
+        availability: 99.9%
+        p95_latency: 8s
+      resources:
+        max_concurrency: 20
+        token_budget_per_task: 32000
+      security:
+        identity: spiffe://example.org/organ/cognition
+        capabilities:
+          - memory.read.approved
+        data_classes:
+          - internal
+      health:
+        readiness: model-loaded-and-policy-reachable
+        liveness: event-loop-responsive
+        semantic: grounded-evaluation-sample
+      failure_policy: degrade
+      recovery:
+        source_of_truth: oci://registry.example.org/doa/cognition@sha256:placeholder
+        rto: 10m
+        rpo: 0s
+        validation: signed-artifact-plus-smoke-evaluation
+      owner: ai-platform
+  tissues:
+    - id: reasoning-workers
+      organ: cognition
+      cell_profile: reasoning-cell-v1
+      replicas:
+        min: 2
+        max: 20
+  topology:
+    failure_domains:
+      - zone
+    spread_critical_organs: true
+  resources:
+    currency:
+      - cpu_ms
+      - gpu_ms
+      - tokens
+      - usd
+    organism_cost_limit_per_day: 100
+  homeostasis:
+    - id: queue-pressure
+      variable: queue_depth
+      target_range:
+        lower: 0
+        upper: 1000
+      sampling_interval: 10s
+      actuators:
+        - scale-reasoning-workers
+        - shed-low-priority
+      action_limit: 2-replicas-per-minute
+      recovery: below-800-for-5m
+  security:
+    default_decision: deny
+    identity: workload-and-user-identity-required
+    quarantine: revoke-grants-isolate-preserve-metadata
+  memory:
+    working_ttl: 1h
+    semantic_write_policy: verified-source-required
+    episodic_retention: 30d
+  adaptation:
+    runtime_self_modification: false
+    promotion_protocol: offline-evaluate-approve-canary-rollback
+  termination:
+    revoke_capabilities: true
+    forensic_policy: metadata-only
+integrity:
+  digest: sha256:placeholder
+  signature_ref: sigstore://example/reference-assistant/1.0.0
+  provenance_ref: in-toto://example/reference-assistant/1.0.0

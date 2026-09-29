@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/event.schema.json",
+  "title": "DOA EventEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specversion", "id", "type", "source", "time", "correlation_id", "ttl_ms", "classification", "data"],
+  "properties": {
+    "specversion": {"const": "1.0"},
+    "id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "type": {"type": "string", "pattern": "^doa\\.[a-z0-9_.-]+\\.v[0-9]+$"},
+    "source": {"type": "string", "format": "uri"},
+    "subject": {"type": "string", "maxLength": 256},
+    "time": {"type": "string", "format": "date-time"},
+    "correlation_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "causation_id": {"type": "string", "maxLength": 128},
+    "ttl_ms": {"type": "integer", "minimum": 1, "maximum": 86400000},
+    "classification": {"enum": ["public", "internal", "confidential", "restricted"]},
+    "idempotency_key": {"type": "string", "maxLength": 256},
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "digest"],
+      "properties": {
+        "algorithm": {"enum": ["sha256", "sha384", "sha512"]},
+        "digest": {"type": "string", "pattern": "^[A-Fa-f0-9]+$"},
+        "signature_ref": {"type": "string"}
+      }
+    },
+    "data": {}
+  }
+}

@@ -1,0 +1,94 @@
+# Changes and New Findings
+
+## Статус
+
+Этот файл фиксирует переход от `DOA_STANDARD v1.0-draft`, доступного только как частичный conversational draft, к `DOA v1.0 Foundational Standard`.
+
+## Добавлено по прямому запросу
+
+- клеточное ядро и ядрышко;
+- цитоскелет и внутриклеточный транспорт;
+- эндоплазматический ретикулум, аппарат Гольджи и пероксисомы;
+- межклеточная коммуникация, тканевая специализация и extracellular matrix;
+- morphogenesis, differentiation, stem-cell pattern и development lifecycle;
+- sensor fusion, calibration, proprioception и temporal alignment;
+- neuroplasticity, adaptive learning и proceduralization;
+- regeneration, inflammation, immune tolerance и wound repair;
+- senescence/aging и oncological anti-patterns;
+- microbiome/symbiosis и multi-organism interaction;
+- barrier systems, DNA repair и epigenetic expression control;
+- spatial organization, circadian cycles и sleep/consolidation;
+- organ redundancy, emergency circulation и graceful degradation.
+
+## Новые фундаментальные находки, отсутствовавшие в исходном перечне
+
+### 1. Граница организма и среды
+
+Без явной trust/ownership boundary невозможно определить, что является self, partner, symbiont, hostile input или просто infrastructure. Добавлены environment, organism, organ и cell boundaries.
+
+### 2. Происхождение и идентичность состояния
+
+Самовосстановление опасно, если источник восстановления не доказан. Добавлены signed genome, artifact digest, provenance, attestation и trusted restore source.
+
+### 3. Cell-cycle checkpoints
+
+Создание и масштабирование клеток требует admission, quota, integrity и readiness checkpoints. Это отдельный механизм от apoptosis.
+
+### 4. Proteostasis и unfolded-protein response
+
+Ошибочно собранные workflows/models/artifacts требуют quality gate, retry/refold, quarantine и controlled degradation до распространения.
+
+### 5. Extracellular matrix и adhesion
+
+Контракты, schemas, service discovery и topology constraints образуют структурную среду ткани; без неё клетки существуют как несогласованный набор workers.
+
+### 6. Coagulation и wound sealing
+
+После breach/partition необходим быстрый локальный deny/containment, который сохраняет организм до repair. Это не равно долгосрочной иммунной политике.
+
+### 7. Renal, osmotic и acid-base regulation
+
+Одной «печени» недостаточно: нужны quota enforcement, filtration, watermarks, retention, electrolyte-like balance очередей/пулов и удаление отходов.
+
+### 8. Respiratory exchange
+
+Compute availability зависит от capacity intake и waste/heat removal. Добавлен отдельный contract для accelerator capacity, thermal/power envelope и saturation.
+
+### 9. Nociception и pain gating
+
+Нужен быстрый локальный сигнал повреждения, отличный от полного incident diagnosis: он снижает нагрузку и инициирует защитный reflex.
+
+### 10. Quorum sensing
+
+Массовое поведение агентов требует density/load-aware admission, иначе возникает retry storm или неконтролируемая репликация.
+
+### 11. Development over time
+
+Provisioning, maturation, active operation, repair, quiescence и retirement различаются; простая модель «deployed/not deployed» недостаточна.
+
+### 12. Ecology и treaties между организмами
+
+Federation нескольких цифровых организмов требует identity federation, contract negotiation, resource quotas, data-use policy и revocation.
+
+### 13. Observer/actuator integrity
+
+Повреждённый sensor или actuator может разрушить гомеостаз даже при корректном controller. Добавлены calibration, freshness, uncertainty и independent verification.
+
+### 14. Chronic inflammation и autoimmune failure
+
+Security controls сами могут стать источником отказа. Добавлены TTL, scope, false-positive budget, tolerance и resolution criteria.
+
+### 15. Cancer as a family of anti-patterns
+
+Онкологическая аналогия формализована как privilege escalation, uncontrolled replication, resource capture, policy evasion, apoptosis resistance и deceptive health reporting.
+
+## Осознанно не утверждается
+
+- что перечень охватывает буквально все известные биологические детали;
+- что один механизм имеет единственный допустимый IT-аналог;
+- что применение биологической терминологии улучшает систему без evidence;
+- что DOA заменяет safety/security standards или domain regulation.
+
+## Влияние на v1.0
+
+Новые находки включены в нормативный реестр, схемы, reference architecture и conformance evidence. Они не создают зависимость от `AI-Engineering-Control-Plane` и не объявляют конкретный runtime каноническим.

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/cell.schema.json",
+  "title": "DOA Cell",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "type", "tissue", "artifact", "genome_ref", "capabilities", "resources", "lifecycle", "health", "termination"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"},
+    "type": {"type": "string", "minLength": 1},
+    "tissue": {"type": "string", "minLength": 1},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uri", "digest"],
+      "properties": {"uri": {"type": "string"}, "digest": {"type": "string"}, "attestation_ref": {"type": "string"}}
+    },
+    "genome_ref": {"type": "string", "minLength": 1},
+    "expression_profile": {"type": "string"},
+    "capabilities": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "data_scopes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requests", "limits"],
+      "properties": {"requests": {"type": "object"}, "limits": {"type": "object"}, "cost_budget": {"type": "number", "minimum": 0}}
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "lease_expires_at"],
+      "properties": {
+        "state": {"enum": ["DECLARED", "ADMITTED", "PROVISIONED", "STARTING", "READY", "ACTIVE", "SUSPECT", "ISOLATED", "REPAIRING", "QUIESCENT", "HIBERNATED", "TERMINATED"]},
+        "lease_expires_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startup", "readiness", "liveness", "semantic"],
+      "properties": {
+        "startup": {"type": "string"},
+        "readiness": {"type": "string"},
+        "liveness": {"type": "string"},
+        "semantic": {"type": "string"}
+      }
+    },
+    "termination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grace_seconds", "revoke_capabilities", "forensic_policy"],
+      "properties": {
+        "grace_seconds": {"type": "integer", "minimum": 0},
+        "revoke_capabilities": {"type": "boolean", "const": true},
+        "forensic_policy": {"enum": ["none", "metadata-only", "policy-permitted-snapshot"]}
+      }
+    }
+  }
+}

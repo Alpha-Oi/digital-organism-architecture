@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/genome.schema.json",
+  "title": "DOA Genome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec", "integrity"],
+  "properties": {
+    "apiVersion": {"const": "doa.standard/v1"},
+    "kind": {"const": "Genome"},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$"},
+        "description": {"type": "string"}
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "profiles", "capabilities", "organs", "invariants", "homeostasis", "security", "adaptation"],
+      "properties": {
+        "identity": {"type": "object", "required": ["organism_id", "trust_domain"]},
+        "profiles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["Core", "Distributed", "Adaptive", "Embodied"]}},
+        "capabilities": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "organs": {"type": "array", "minItems": 1, "items": {"$ref": "organ.schema.json"}},
+        "tissues": {"type": "array", "items": {"type": "object"}},
+        "invariants": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "topology": {"type": "object"},
+        "resources": {"type": "object"},
+        "homeostasis": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "security": {"type": "object", "required": ["default_decision", "identity", "quarantine"]},
+        "memory": {"type": "object"},
+        "adaptation": {"type": "object", "required": ["runtime_self_modification", "promotion_protocol"]},
+        "termination": {"type": "object"}
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "signature_ref"],
+      "properties": {"digest": {"type": "string"}, "signature_ref": {"type": "string"}, "provenance_ref": {"type": "string"}}
+    }
+  }
+}

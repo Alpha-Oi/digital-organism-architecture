@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/organism.schema.json",
+  "title": "DOA Organism Runtime Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "genome_ref", "profiles", "state", "organs", "effective_policy", "observed_at", "conformance"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"},
+    "genome_ref": {"type": "string", "minLength": 1},
+    "profiles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["Core", "Distributed", "Adaptive", "Embodied"]}},
+    "state": {"enum": ["SPECIFIED", "VALIDATED", "PROVISIONING", "DEVELOPING", "READY", "ACTIVE", "STRESSED", "DEGRADED", "REPAIRING", "QUIESCENT", "RETIRING", "TERMINATED"]},
+    "security_state": {"enum": ["NORMAL", "SUSPECT", "QUARANTINED", "RECOVERING"]},
+    "organs": {"type": "array", "minItems": 1, "items": {"$ref": "organ.schema.json"}},
+    "cells": {"type": "array", "items": {"$ref": "cell.schema.json"}},
+    "effective_policy": {
+      "type": "object",
+      "required": ["genome_digest", "overlay_digests"],
+      "properties": {"genome_digest": {"type": "string"}, "overlay_digests": {"type": "array", "items": {"type": "string"}}}
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "health_evidence": {"type": "array", "items": {"type": "object"}},
+    "conformance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["standard", "status", "evidence_ref", "verified_at"],
+      "properties": {
+        "standard": {"const": "DOA-FS-1.0"},
+        "status": {"enum": ["UNVERIFIED", "PARTIAL", "VERIFIED"]},
+        "exclusions": {"type": "array", "items": {"type": "string"}},
+        "evidence_ref": {"type": "string"},
+        "verified_at": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}
