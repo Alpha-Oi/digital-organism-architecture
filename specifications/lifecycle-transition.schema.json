@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/lifecycle-transition.schema.json",
+  "title": "DOA Lifecycle Transition (payload of doa.lifecycle.*.transitioned.v1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entity_type",
+    "entity_id",
+    "from",
+    "to",
+    "guard_evidence",
+    "authority",
+    "occurred_at"
+  ],
+  "properties": {
+    "entity_type": {
+      "enum": [
+        "organism",
+        "cell",
+        "incident",
+        "change",
+        "embodied_safety"
+      ]
+    },
+    "entity_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "from": {
+      "type": "string",
+      "pattern": "^[A-Z_]+$"
+    },
+    "to": {
+      "type": "string",
+      "pattern": "^[A-Z_]+$"
+    },
+    "guard_evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority": {
+      "type": "string",
+      "minLength": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "terminal_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "grants_revoked": {
+          "type": "boolean"
+        },
+        "endpoints_removed": {
+          "type": "boolean"
+        },
+        "forensic_policy": {
+          "enum": [
+            "none",
+            "metadata-only",
+            "policy-permitted-snapshot"
+          ]
+        },
+        "tombstone_ref": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

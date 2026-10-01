@@ -1,0 +1,13 @@
+specversion: '1.0'
+id: 01J0000000000000000000000
+type: doa.observation.resource_pressure.v1
+source: doa://reference-assistant-prod/organ/metabolism
+subject: cell/reasoning-cell-17
+time: '2026-10-01T12:00:00Z'
+correlation_id: task-123
+causation_id: event-122
+ttl_ms: 30000
+classification: restricted
+epoch: 3
+data:
+  queue_depth: 900

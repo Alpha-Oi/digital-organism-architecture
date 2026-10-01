@@ -4,33 +4,167 @@
   "title": "DOA Organism Runtime Record",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "genome_ref", "profiles", "state", "organs", "effective_policy", "observed_at", "conformance"],
+  "required": [
+    "id",
+    "genome_ref",
+    "profiles",
+    "state",
+    "security_state",
+    "epoch",
+    "organs",
+    "effective_policy",
+    "observed_at",
+    "conformance"
+  ],
   "properties": {
-    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"},
-    "genome_ref": {"type": "string", "minLength": 1},
-    "profiles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["Core", "Distributed", "Adaptive", "Embodied"]}},
-    "state": {"enum": ["SPECIFIED", "VALIDATED", "PROVISIONING", "DEVELOPING", "READY", "ACTIVE", "STRESSED", "DEGRADED", "REPAIRING", "QUIESCENT", "RETIRING", "TERMINATED"]},
-    "security_state": {"enum": ["NORMAL", "SUSPECT", "QUARANTINED", "RECOVERING"]},
-    "organs": {"type": "array", "minItems": 1, "items": {"$ref": "organ.schema.json"}},
-    "cells": {"type": "array", "items": {"$ref": "cell.schema.json"}},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"
+    },
+    "genome_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "Core",
+          "Distributed",
+          "Adaptive",
+          "Embodied"
+        ]
+      }
+    },
+    "state": {
+      "enum": [
+        "SPECIFIED",
+        "VALIDATED",
+        "PROVISIONING",
+        "DEVELOPING",
+        "READY",
+        "ACTIVE",
+        "STRESSED",
+        "DEGRADED",
+        "REPAIRING",
+        "QUIESCENT",
+        "SENESCENT",
+        "RETIRING",
+        "TERMINATED"
+      ]
+    },
+    "security_state": {
+      "enum": [
+        "NORMAL",
+        "SUSPECT",
+        "QUARANTINED",
+        "RECOVERING"
+      ]
+    },
+    "epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "lineage_ref": {
+      "type": "string"
+    },
+    "organs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "organ.schema.json"
+      }
+    },
+    "cells": {
+      "type": "array",
+      "items": {
+        "$ref": "cell.schema.json"
+      }
+    },
     "effective_policy": {
       "type": "object",
-      "required": ["genome_digest", "overlay_digests"],
-      "properties": {"genome_digest": {"type": "string"}, "overlay_digests": {"type": "array", "items": {"type": "string"}}}
+      "additionalProperties": false,
+      "required": [
+        "genome_digest",
+        "overlay_digests"
+      ],
+      "properties": {
+        "genome_digest": {
+          "type": "string",
+          "pattern": "^sha(256|384|512):[A-Fa-f0-9]+$"
+        },
+        "overlay_digests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
-    "observed_at": {"type": "string", "format": "date-time"},
-    "health_evidence": {"type": "array", "items": {"type": "object"}},
+    "observed_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "health_evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "health-evidence.schema.json"
+      }
+    },
     "conformance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["standard", "status", "evidence_ref", "verified_at"],
+      "required": [
+        "standard",
+        "status",
+        "evidence_ref",
+        "verified_at"
+      ],
       "properties": {
-        "standard": {"const": "DOA-FS-1.0"},
-        "status": {"enum": ["UNVERIFIED", "PARTIAL", "VERIFIED"]},
-        "exclusions": {"type": "array", "items": {"type": "string"}},
-        "evidence_ref": {"type": "string"},
-        "verified_at": {"type": "string", "format": "date-time"}
+        "standard": {
+          "const": "DOA-FS-1.0"
+        },
+        "status": {
+          "enum": [
+            "UNVERIFIED",
+            "PARTIAL",
+            "VERIFIED"
+          ]
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_ref": {
+          "type": "string"
+        },
+        "verified_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+        }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "TERMINATED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "cells": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ]
 }

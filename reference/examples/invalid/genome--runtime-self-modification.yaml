@@ -1,0 +1,190 @@
+apiVersion: doa.standard/v1
+kind: Genome
+metadata:
+  name: reference-assistant
+  version: 1.0.0
+  description: Minimal illustrative Distributed Profile organism
+spec:
+  identity:
+    organism_id: reference-assistant-prod
+    trust_domain: example.org
+    trust_root_ref: kms://example.org/trust-roots/reference-assistant-v1
+  profiles:
+  - Core
+  - Distributed
+  capabilities:
+  - answer-question
+  - retrieve-approved-knowledge
+  boundary:
+    ingress:
+    - gateway/https-api
+    egress:
+    - gateway/outbound-api
+    external_dependencies:
+    - id: foundation-model-provider
+      class: foundation-model
+      trust: PARTNER
+      contract: contracts/model-adapter.v1
+      failure_policy: degrade
+    - id: user-directory
+      class: external-service
+      trust: PARTNER
+      contract: contracts/oidc-userinfo.v1
+      failure_policy: fail-closed
+  invariants:
+  - external-content-cannot-modify-policy
+  - every-side-effect-requires-capability-grant
+  - audit-records-never-contain-secrets
+  organs:
+  - id: cognition
+    version: 1.0.0
+    responsibility: Produce grounded answer proposals from approved context
+    interfaces:
+    - name: plan-request
+      direction: in
+      schema_ref: schemas/plan-request.v1.json
+    - name: answer-proposal
+      direction: out
+      schema_ref: schemas/answer-proposal.v1.json
+    dependencies:
+    - memory
+    - policy
+    optional_dependencies:
+    - foundation-model-provider
+    slo:
+      availability: 99.9%
+      p95_latency: 8s
+    resources:
+      max_concurrency: 20
+      token_budget_per_task: 32000
+    security:
+      identity: spiffe://example.org/organ/cognition
+      capabilities:
+      - memory.read.approved
+      data_classes:
+      - internal
+    health:
+      readiness: model-loaded-and-policy-reachable
+      liveness: event-loop-responsive
+      semantic: grounded-evaluation-sample
+    failure_policy: degrade
+    critical: true
+    redundancy:
+      mode: active-active
+      min_replicas: 2
+      failure_domains:
+      - zone
+    recovery:
+      modes:
+      - RESTART
+      - REPLACE
+      - ROLLBACK
+      - REGENERATE
+      source_of_truth: oci://registry.example.org/doa/cognition@sha256:0000000000000000000000000000000000000000000000000000000000000000
+      rto: 10m
+      rpo: 0s
+      validation: signed-artifact-plus-smoke-evaluation
+    owner: ai-platform
+  tissues:
+  - id: reasoning-workers
+    organ: cognition
+    cell_profile: reasoning-cell-v1
+    replicas:
+      min: 2
+      max: 20
+  topology:
+    failure_domains:
+    - zone
+    spread_critical_organs: true
+  resources:
+    currency:
+    - cpu_ms
+    - gpu_ms
+    - tokens
+    - usd
+    organism_cost_limit_per_day: 100
+  homeostasis:
+  - id: queue-pressure
+    variable: queue_depth
+    unit: messages
+    sensor:
+      source: otel://collector/metrics
+      interval: 10s
+      freshness_max: 30s
+      independent_source: otel://collector-b/metrics
+    target_range:
+      lower: 0
+      upper: 1000
+    thresholds:
+      warning: 800
+      critical: 1200
+      safety_ceiling: 5000
+    controller:
+      policy: proportional-with-hysteresis
+      hysteresis: 100
+      deadband: 100
+    actuators:
+    - scale-reasoning-workers
+    - shed-low-priority
+    limits:
+      max_step: 2
+      max_actions_per_minute: 3
+    escalation:
+    - level: WARNING
+      condition: queue_depth above 800 for 2m
+      action: scale-reasoning-workers
+    - level: CRITICAL
+      condition: queue_depth above 1200 for 2m
+      action: shed-low-priority
+    - level: EMERGENCY
+      condition: queue_depth above 5000 or sensor UNKNOWN for 5m
+      action: freeze-and-page-operator
+    recovery:
+      stable_for: 5m
+      criterion: queue_depth below 800
+    fallback: freeze-and-escalate
+    override:
+      authority: on-call-operator
+      max_duration: 1h
+  security:
+    default_decision: deny
+    identity: workload-and-user-identity-required
+    quarantine: revoke-grants-isolate-preserve-metadata
+  memory:
+    working_ttl: 1h
+    semantic_write_policy: verified-source-required
+    episodic_retention: 30d
+    forgetting: ttl-plus-consent-withdrawal-plus-crypto-erasure
+  adaptation:
+    runtime_self_modification: true
+    promotion_protocol: offline-evaluate-approve-canary-rollback
+  growth_control:
+    max_cells: 40
+    max_spawn_depth: 2
+    max_delegation_depth: 2
+    spawn_rate_limit_per_minute: 4
+    orphan_lease_ttl: 5m
+    grant_issuer_separate_from_enforcer: true
+  ecology:
+    reproduction: forbidden
+    federation: none
+    horizontal_transfer: forbidden
+  aging:
+    index_inputs:
+    - dependency-eol
+    - credential-age
+    - error-budget-burn
+    senescence_threshold: 0.8
+    retirement_authority: ai-platform-owner
+  recovery:
+    seed_ref: oci://registry-offline.example.org/doa/seed/reference-assistant@sha256:0000000000000000000000000000000000000000000000000000000000000000
+    seed_outside_failure_domain: true
+    catastrophic_recovery_authority: platform-owner-plus-security-officer
+  termination:
+    revoke_capabilities: true
+    forensic_policy: metadata-only
+    tombstone: true
+integrity:
+  digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  signature_ref: sigstore://example/reference-assistant/1.0.0
+  provenance_ref: in-toto://example/reference-assistant/1.0.0

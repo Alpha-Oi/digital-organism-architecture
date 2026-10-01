@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/lineage-manifest.schema.json",
+  "title": "DOA LineageManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entity_id",
+    "entity_type",
+    "genome_ref",
+    "generation",
+    "parents",
+    "artifacts",
+    "identity_continuity",
+    "signature_ref"
+  ],
+  "properties": {
+    "entity_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"
+    },
+    "entity_type": {
+      "enum": [
+        "organism",
+        "cell",
+        "variant"
+      ]
+    },
+    "genome_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "parents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "genome_digest"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "genome_digest": {
+            "type": "string",
+            "pattern": "^sha(256|384|512):[A-Fa-f0-9]+$"
+          }
+        }
+      }
+    },
+    "inherited_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "uri",
+          "digest"
+        ],
+        "properties": {
+          "uri": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "deliberate_differences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "identity_continuity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "continuous",
+            "rotated",
+            "new-identity"
+          ]
+        },
+        "succeeded_by": {
+          "type": "string"
+        },
+        "predecessor": {
+          "type": "string"
+        },
+        "rotation_record_ref": {
+          "type": "string"
+        }
+      }
+    },
+    "credential_cloning": {
+      "const": false
+    },
+    "signature_ref": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "generation": {
+            "minimum": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "parents": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "identity_continuity": {
+            "properties": {
+              "mode": {
+                "const": "rotated"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "identity_continuity": {
+            "required": [
+              "rotation_record_ref"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

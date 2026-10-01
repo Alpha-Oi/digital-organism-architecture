@@ -21,6 +21,8 @@
 | Metabolism | resource scheduler and accounting | hard quotas and priority budgets |
 | Repair | reconciler and restore controller | uses trusted artifacts/backups |
 | Sensors | telemetry collectors | independent source and freshness |
+| Identity authority | workload identity issuer, continuity and tombstone registry | issues identities; rotation by signed record; rejects restore after tombstone |
+| Admission and lease controller | admission controller, lease/fencing service | enforces `growth_control`; fences lost cells without their cooperation |
 
 ## End-to-end transaction
 

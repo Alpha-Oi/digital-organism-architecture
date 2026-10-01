@@ -1,0 +1,35 @@
+id: reasoning-cell-17
+type: reasoning-cell-v1
+tissue: reasoning-workers
+artifact:
+  uri: oci://registry.example.org/doa/reasoning-cell
+  digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  attestation_ref: in-toto://example/reasoning-cell/1.0.0
+genome_ref: reference-assistant@1.0.0
+expression_profile: reasoning-default
+capabilities:
+- memory.read.approved
+data_scopes:
+- internal
+resources:
+  requests:
+    cpu_ms: 500
+  limits:
+    cpu_ms: 2000
+  cost_budget: 2.5
+lineage:
+  parent_id: reasoning-workers-controller
+  generation: 1
+  spawn_budget: 0
+lifecycle:
+  state: ACTIVE
+  lease_expires_at: '2026-10-01T12:05:00Z'
+health:
+  startup: passed
+  readiness: model-loaded
+  liveness: event-loop-responsive
+  semantic: grounded-evaluation-sample
+termination:
+  grace_seconds: 30
+  revoke_capabilities: true
+  forensic_policy: metadata-only

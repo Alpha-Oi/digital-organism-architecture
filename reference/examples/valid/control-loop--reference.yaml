@@ -1,0 +1,42 @@
+id: queue-pressure
+variable: queue_depth
+unit: messages
+sensor:
+  source: otel://collector/metrics
+  interval: 10s
+  freshness_max: 30s
+  independent_source: otel://collector-b/metrics
+target_range:
+  lower: 0
+  upper: 1000
+thresholds:
+  warning: 800
+  critical: 1200
+  safety_ceiling: 5000
+controller:
+  policy: proportional-with-hysteresis
+  hysteresis: 100
+  deadband: 100
+actuators:
+- scale-reasoning-workers
+- shed-low-priority
+limits:
+  max_step: 2
+  max_actions_per_minute: 3
+escalation:
+- level: WARNING
+  condition: queue_depth above 800 for 2m
+  action: scale-reasoning-workers
+- level: CRITICAL
+  condition: queue_depth above 1200 for 2m
+  action: shed-low-priority
+- level: EMERGENCY
+  condition: queue_depth above 5000 or sensor UNKNOWN for 5m
+  action: freeze-and-page-operator
+recovery:
+  stable_for: 5m
+  criterion: queue_depth below 800
+fallback: freeze-and-escalate
+override:
+  authority: on-call-operator
+  max_duration: 1h

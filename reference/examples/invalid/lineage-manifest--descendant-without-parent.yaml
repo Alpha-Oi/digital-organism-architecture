@@ -1,0 +1,14 @@
+entity_id: reference-assistant-prod
+entity_type: organism
+genome_ref: reference-assistant@1.0.0
+generation: 2
+parents: []
+inherited_artifacts: []
+artifacts:
+- uri: oci://registry.example.org/doa/cognition
+  digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+deliberate_differences: []
+identity_continuity:
+  mode: continuous
+credential_cloning: false
+signature_ref: sigstore://example/lineage/reference-assistant-prod

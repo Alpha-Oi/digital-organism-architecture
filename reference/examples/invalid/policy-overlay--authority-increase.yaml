@@ -1,0 +1,13 @@
+id: overlay-001
+base_genome_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+precedence: 100
+scope: organ/cognition
+issuer: doa://reference-assistant-prod/organ/policy
+reason: temporary stricter verification during incident INC-7
+issued_at: '2026-10-01T12:00:00Z'
+expires_at: '2026-10-01T18:00:00Z'
+effect:
+  changes:
+    verification_level: high
+  increases_authority: true
+signature_ref: sigstore://example/overlays/overlay-001

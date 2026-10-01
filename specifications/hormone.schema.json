@@ -4,25 +4,92 @@
   "title": "DOA Homeostatic or Endocrine Signal",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "signal", "scope", "severity", "issuer", "issued_at", "expires_at", "signature_ref"],
+  "required": [
+    "id",
+    "signal",
+    "scope",
+    "severity",
+    "issuer",
+    "issued_at",
+    "expires_at",
+    "reversal",
+    "signature_ref"
+  ],
   "properties": {
-    "id": {"type": "string", "minLength": 1},
-    "signal": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,63}$"},
-    "scope": {"type": "string", "enum": ["cell", "tissue", "organ", "organism", "ecosystem"]},
-    "target": {"type": "string"},
-    "variable": {"type": "string"},
-    "observed": {"type": ["number", "integer", "string", "boolean", "null"]},
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "signal": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{2,63}$"
+    },
+    "scope": {
+      "enum": [
+        "cell",
+        "tissue",
+        "organ",
+        "organism",
+        "ecosystem"
+      ]
+    },
+    "target": {
+      "type": "string"
+    },
+    "variable": {
+      "type": "string"
+    },
+    "observed": {
+      "type": [
+        "number",
+        "integer",
+        "string",
+        "boolean",
+        "null"
+      ]
+    },
     "target_range": {
       "type": "object",
       "additionalProperties": false,
-      "properties": {"lower": {"type": "number"}, "upper": {"type": "number"}, "unit": {"type": "string"}}
+      "properties": {
+        "lower": {
+          "type": "number"
+        },
+        "upper": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        }
+      }
     },
-    "severity": {"type": "number", "minimum": 0, "maximum": 1},
-    "action_budget": {"type": "object"},
-    "issuer": {"type": "string", "minLength": 1},
-    "issued_at": {"type": "string", "format": "date-time"},
-    "expires_at": {"type": "string", "format": "date-time"},
-    "reversal": {"type": "string"},
-    "signature_ref": {"type": "string", "minLength": 1}
+    "severity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "action_budget": {
+      "type": "object"
+    },
+    "issuer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "issued_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "expires_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "reversal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "signature_ref": {
+      "type": "string",
+      "minLength": 1
+    }
   }
 }

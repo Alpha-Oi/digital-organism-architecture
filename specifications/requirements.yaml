@@ -1,0 +1,349 @@
+# DOA conformance requirement registry (normative, machine-readable).
+# Claims reference these IDs; docs/CONFORMANCE.md renders them; scripts/validate_repository.py checks consistency.
+# profile: Core | Distributed | Adaptive | Embodied | Conditional
+# verification: schema (machine-checkable against specifications/), test (documented executed test), inspection (documented review)
+standard: DOA-FS-1.0
+requirements:
+  - id: REQ-CORE-01
+    profile: Core
+    title: Identity of every action
+    statement: Every action, event and side effect MUST be attributable to a verifiable subject, component and version.
+    mappings: [I-03, E-03]
+    evidence: Identity inventory and sample audit trace linking action to subject, component and artifact digest.
+    verification: inspection
+  - id: REQ-CORE-02
+    profile: Core
+    title: Declared organism boundary
+    statement: The genome MUST declare ingress, egress and external dependencies; all boundary crossings MUST pass policy enforcement.
+    mappings: [C-20, I-01, I-02, C-07, C-21, C-22, C-23]
+    evidence: Genome `spec.boundary`, boundary inventory, and bypass test results.
+    verification: schema
+  - id: REQ-CORE-03
+    profile: Core
+    title: Desired/observed separation
+    statement: A signed genome MUST define desired state; telemetry MUST define observed state; a reconciler MUST link them.
+    mappings: [C-02, N-02, C-03, T-07]
+    evidence: Signed genome with digest, reconciliation log showing drift detection.
+    verification: schema
+  - id: REQ-CORE-04
+    profile: Core
+    title: Genome/epigenome separation
+    statement: Runtime policy changes MUST be expressed as expiring, signed overlays that cannot increase authority; the effective policy MUST be reconstructable.
+    mappings: [C-04]
+    evidence: PolicyOverlay records and effective-policy snapshot (`organism.effective_policy`).
+    verification: schema
+  - id: REQ-CORE-05
+    profile: Core
+    title: Least capability and attenuation
+    statement: Capabilities MUST be narrow, expiring, revocable CapabilityGrants; delegated grants MUST be a subset of the parent grant with bounded depth.
+    mappings: [N-06, N-11, I-17, T-04]
+    evidence: CapabilityGrant samples, deny tests, delegation-depth test.
+    verification: test
+  - id: REQ-CORE-06
+    profile: Core
+    title: No unilateral self-modification
+    statement: Runtime components MUST NOT modify the canonical genome, policies or their own authority directly.
+    mappings: [C-06, C-02]
+    evidence: Access-policy test showing runtime write to genome/policy store is rejected.
+    verification: test
+  - id: REQ-CORE-07
+    profile: Core
+    title: Closed-loop homeostasis
+    statement: Each regulated domain MUST have a ControlLoopSpec with sensor freshness, target range, controller, limits, escalation, recovery and manual override; positive-feedback paths MUST declare ceiling and TTL.
+    mappings: [H-01, H-02, H-03, M-14]
+    evidence: ControlLoopSpec records and alert-to-action traces for resource, memory, latency, agent/tool failure, security, dependency and model-quality domains.
+    verification: schema
+  - id: REQ-CORE-08
+    profile: Core
+    title: Compartmentalization
+    statement: Failure domains MUST be declared and enforced so that one cell failure does not automatically become organism failure.
+    mappings: [C-24, T-03]
+    evidence: Failure-domain declaration and a cell-kill test with unaffected neighbour SLOs.
+    verification: test
+  - id: REQ-CORE-09
+    profile: Core
+    title: Provenance
+    statement: Data, models, policies, memories and artifacts admitted to trusted paths MUST have source, time, integrity and classification.
+    mappings: [E-01, C-08, N-16, C-10, M-07]
+    evidence: Provenance-gap test; MemoryRecord and artifact attestations.
+    verification: test
+  - id: REQ-CORE-10
+    profile: Core
+    title: Reversibility
+    statement: Every rollout, adaptation and recovery action MUST have a validation step and a rollback or containment path outside the failing control path.
+    mappings: [I-13, I-14]
+    evidence: Restore and rollback test results.
+    verification: test
+  - id: REQ-CORE-11
+    profile: Core
+    title: Observable lifecycle
+    statement: Organism and cell state transitions MUST follow specifications/state-machines.yaml and emit lifecycle-transition events with guard evidence and authority.
+    mappings: [T-10, C-25, C-26]
+    evidence: State-transition logs validating against lifecycle-transition.schema.json and the canonical machines.
+    verification: schema
+  - id: REQ-CORE-12
+    profile: Core
+    title: Human authority
+    statement: High-impact side effects MUST have a defined authority model and approval boundary; break-glass actions MUST be time-bounded and audited.
+    mappings: [N-06, N-07]
+    evidence: Authority matrix and a denied/approved high-impact action trace.
+    verification: inspection
+  - id: REQ-CORE-13
+    profile: Core
+    title: Truthful uncertainty
+    statement: Absence of a signal MUST be treated as UNKNOWN, not healthy; liveness MUST NOT be reported as correctness.
+    mappings: [N-01, N-03]
+    evidence: HealthEvidence samples including UNKNOWN and stale-signal test.
+    verification: test
+  - id: REQ-CORE-14
+    profile: Core
+    title: Immune response lifecycle
+    statement: Security incidents MUST follow the incident machine (detect, identify, contain, quarantine, neutralize, recover, learn, update defenses) and quarantine MUST work without cooperation of the subject.
+    mappings: [I-03, I-04, I-05, I-08, I-10, I-12, M-04, C-17]
+    evidence: Incident record for a controlled exercise and a quarantine test against an uncooperative cell.
+    verification: test
+  - id: REQ-CORE-15
+    profile: Core
+    title: Bounded termination (apoptosis)
+    statement: Cell and organism termination MUST follow the bounded protocol, leave no live grants, endpoints or replicas, and emit a terminal record.
+    mappings: [C-27, E-05]
+    evidence: Apoptosis test and terminal record (`lifecycle-transition.terminal_record`).
+    verification: test
+  - id: REQ-CORE-16
+    profile: Core
+    title: Uncontrolled failure containment (necrosis)
+    statement: Lost or crashed cells MUST be fenced by lease expiry, their grants revoked, and duplicate side effects prevented by idempotency.
+    mappings: [C-28, C-29]
+    evidence: Crash-injection test showing fencing latency and revoked grants.
+    verification: test
+  - id: REQ-CORE-17
+    profile: Core
+    title: Growth control
+    statement: Cell count, spawn depth, spawn rate and delegation depth MUST be bounded by genome `growth_control`; grant issuer and enforcer MUST be separate; orphans MUST be detected by lease.
+    mappings: [C-25, I-17, N-11]
+    evidence: Runaway-spawn test, admission rejection log, orphan-lease report.
+    verification: test
+  - id: REQ-CORE-18
+    profile: Core
+    title: Resource accounting
+    statement: All work MUST be reserved and charged against a budget; resource scarcity MUST gate growth.
+    mappings: [C-16, M-12, M-14, M-09]
+    evidence: Accounting reconciliation report and scarcity-gating test.
+    verification: test
+  - id: REQ-CORE-19
+    profile: Core
+    title: Memory governance
+    statement: Memory MUST be typed (working, episodic, semantic, procedural), carry provenance, confidence, retention and consent, and support decay, supersession and verified erasure.
+    mappings: [N-12, N-13, N-14, N-15, N-16, N-17, C-18]
+    evidence: MemoryRecord samples, consolidation log, erasure test.
+    verification: schema
+  - id: REQ-CORE-20
+    profile: Core
+    title: Recovery taxonomy
+    statement: Each organ MUST declare permitted recovery modes (RESTART, RESTORE, REPAIR, REPLACE, REGENERATE, REBUILD, RECONFIGURE, ROLLBACK); recovery MUST NOT clone corrupted observed state or credentials.
+    mappings: [C-05, T-05, I-13, I-14]
+    evidence: Organ `recovery.modes`, restore drill, repair-source independence evidence.
+    verification: schema
+  - id: REQ-CORE-21
+    profile: Core
+    title: Aging and senescence
+    statement: The organism MUST compute an AgingIndex, move aged components to a restricted senescent state and replace or retire them.
+    mappings: [C-30, I-18]
+    evidence: Genome `aging`, aging report, senescence-to-replacement record.
+    verification: schema
+  - id: REQ-CORE-22
+    profile: Core
+    title: Identity continuity and anti-resurrection
+    statement: Identity MUST persist across component replacement via signed continuity records, and terminated or revoked entities MUST NOT be restorable from stale state.
+    mappings: [E-03, E-04, E-02]
+    evidence: Component-replacement test and restore-after-tombstone rejection test.
+    verification: test
+  - id: REQ-CORE-23
+    profile: Core
+    title: Failure-class coverage
+    statement: Each applicable class in docs/FAILURE_AND_RECOVERY.md MUST have documented detection, containment, recovery and verification, or a justified exclusion.
+    mappings: [C-24, H-05, I-12]
+    evidence: Failure-class coverage table for the implementation with test references.
+    verification: inspection
+  - id: REQ-CORE-24
+    profile: Core
+    title: Audit and secret hygiene
+    statement: Audit records MUST be tamper-evident, survive loss of the ordinary data plane where feasible, and MUST NOT contain secrets or unrestricted reasoning traces.
+    mappings: [I-05, M-08]
+    evidence: Audit-store design, secret-scan result over audit samples.
+    verification: test
+  - id: REQ-CORE-25
+    profile: Core
+    title: Microbiome (guest) governance
+    statement: Third-party plugins, tools and agents MUST be admitted as bounded symbionts with identity, quota and revocation, and MUST NOT acquire organ privileges.
+    mappings: [E-12, I-03]
+    evidence: Symbiont inventory, quota configuration, revocation test.
+    verification: test
+  - id: REQ-CORE-26
+    profile: Core
+    title: Separation of cognition and authority
+    statement: Cognitive output (including any LLM) MUST be a proposal; routing and salience MUST NOT raise the authority of a source; no single model may be sole proposer, policy authority, executor and verifier of a high-impact action.
+    mappings: [N-04, N-05, N-06, N-07]
+    evidence: Decision-flow diagram, test that a plan without a grant is not executed, test that high salience does not bypass policy.
+    verification: test
+  - id: REQ-DIST-01
+    profile: Distributed
+    title: Event contract and delivery semantics
+    statement: Events MUST use EventEnvelope; delivery semantics, ordering scope, idempotency and TTL MUST be declared; consumers MUST validate schema, identity, freshness and authorization.
+    mappings: [M-01, C-13, M-11, T-02]
+    evidence: Delivery-semantics declaration, duplicate/replay test.
+    verification: test
+  - id: REQ-DIST-02
+    profile: Distributed
+    title: Partial failure, backpressure and emergency flow
+    statement: Backpressure, load shedding and emergency circulation MUST preserve identity, safety, audit and recovery traffic.
+    mappings: [C-11, M-03, M-06]
+    evidence: Overload drill showing vital flow latency.
+    verification: test
+  - id: REQ-DIST-03
+    profile: Distributed
+    title: Topology and failure-domain placement
+    statement: Critical organs MUST be placed across independent failure domains; placement drift MUST be detected.
+    mappings: [C-14, T-06, T-08]
+    evidence: Declared-vs-observed topology report.
+    verification: schema
+  - id: REQ-DIST-04
+    profile: Distributed
+    title: Quorum, failover and split-brain handling
+    statement: Quorum and failover MUST use membership epochs and fencing; split-brain MUST be detected and resolved by a declared rule.
+    mappings: [H-04, H-05, N-21]
+    evidence: Partition and failover drills with epoch logs.
+    verification: test
+  - id: REQ-DIST-05
+    profile: Distributed
+    title: Clock and synchronization assumptions
+    statement: Clock source, skew tolerance, event-time vs processing-time and late-event policy MUST be declared and tested.
+    mappings: [N-21, N-19]
+    evidence: Skew-injection test.
+    verification: test
+  - id: REQ-DIST-06
+    profile: Distributed
+    title: Genetic drift detection
+    statement: Replica and lineage divergence from the signed genome MUST be detected and reconciled from a trusted source.
+    mappings: [E-10, C-05]
+    evidence: Divergence-injection test.
+    verification: test
+  - id: REQ-DIST-07
+    profile: Distributed
+    title: Catastrophic recovery
+    statement: A catastrophic recovery path from a seed outside the failure domain MUST exist, with human authority, epoch increment and identity continuity decision.
+    mappings: [E-06, T-05, E-04]
+    evidence: Catastrophic recovery drill report.
+    verification: test
+  - id: REQ-ADPT-01
+    profile: Adaptive
+    title: Learning is not evolution
+    statement: Learning MUST be confined to declared adaptive parameters and MUST NOT modify the genome, invariants, authority model or audit semantics; evolution (genome change) MUST use the change machine with class=evolution.
+    mappings: [N-20, E-08]
+    evidence: Genome `adaptation.learning_bounds` and a test rejecting out-of-bound learning.
+    verification: schema
+  - id: REQ-ADPT-02
+    profile: Adaptive
+    title: Governed change protocol
+    statement: Every adaptation MUST pass the change machine with canary and rollback.
+    mappings: [N-20, E-08, E-09, N-08]
+    evidence: Change-protocol state logs for at least one promoted and one rolled-back change.
+    verification: test
+  - id: REQ-ADPT-03
+    profile: Adaptive
+    title: Separation of proposer, evaluator and approver
+    statement: Proposer, evaluator and approver of a change MUST be distinct authorities.
+    mappings: [E-09, N-06]
+    evidence: Genome `adaptation.separation_of_duties` and approval records.
+    verification: schema
+  - id: REQ-ADPT-04
+    profile: Adaptive
+    title: Evaluation-set governance
+    statement: Evaluation sets MUST be versioned, provenance-tracked and protected from the proposer.
+    mappings: [E-09, E-01]
+    evidence: Evaluation-set registry and access policy.
+    verification: inspection
+  - id: REQ-ADPT-05
+    profile: Adaptive
+    title: Drift detection and reward-hacking resistance
+    statement: Model/behavioral drift MUST be measured against baseline; fitness MUST be multi-criteria with safety constraints as hard gates.
+    mappings: [E-11, E-09]
+    evidence: Drift-injection test and scorecard with safety gates.
+    verification: test
+  - id: REQ-ADPT-06
+    profile: Adaptive
+    title: Lineage of variants
+    statement: Every promoted variant MUST have a LineageManifest linking parent genome, artifacts and deliberate differences.
+    mappings: [E-02, E-08]
+    evidence: LineageManifest records for promoted variants.
+    verification: schema
+  - id: REQ-ADPT-07
+    profile: Adaptive
+    title: Learned defenses are measured
+    statement: Learned detection rules and indicators MUST be validated for precision, recall and blast radius, and MUST decay or be retired.
+    mappings: [I-06, I-07, I-16]
+    evidence: Rule validation report and indicator-decay test.
+    verification: test
+  - id: REQ-EMB-01
+    profile: Embodied
+    title: Hazard analysis and safe state
+    statement: A hazard analysis and a defined physical safe state MUST exist and be referenced in the genome `embodiment`.
+    mappings: [R-04]
+    evidence: Hazard analysis document reference and safe-state definition.
+    verification: schema
+  - id: REQ-EMB-02
+    profile: Embodied
+    title: Independent interlock, watchdog and emergency stop
+    statement: Emergency stop and hard limits MUST be independent of any LLM, planner and network control plane.
+    mappings: [R-04, R-03]
+    evidence: E-stop and watchdog tests.
+    verification: test
+  - id: REQ-EMB-03
+    profile: Embodied
+    title: Real-time budget
+    statement: Worst-case response time of safety paths MUST be specified and evidenced.
+    mappings: [N-09, R-04]
+    evidence: Timing analysis or measurement report.
+    verification: test
+  - id: REQ-EMB-04
+    profile: Embodied
+    title: Calibrated sensing and uncertainty
+    statement: Observations MUST carry calibration version, uncertainty and freshness; sensor disagreement MUST yield UNCERTAIN state.
+    mappings: [R-01, N-01, R-02]
+    evidence: Calibration and fault-injection tests.
+    verification: test
+  - id: REQ-EMB-05
+    profile: Embodied
+    title: Actuator envelope and stale command rejection
+    statement: Actuator commands MUST be bounded, deadline-limited and preconditioned; expired or replayed commands MUST be rejected.
+    mappings: [R-03, N-07]
+    evidence: Stale/replayed command rejection test.
+    verification: test
+  - id: REQ-EMB-06
+    profile: Embodied
+    title: Reset authority
+    statement: Leaving LOCKED_OUT MUST require inspection and authorized reset by a qualified human.
+    mappings: [R-04, R-05]
+    evidence: Reset-authority test and procedure.
+    verification: test
+  - id: REQ-COND-01
+    profile: Conditional
+    title: Reproduction control
+    statement: If reproduction is allowed it MUST be plan-gated with independent identity and lineage; otherwise `ecology.reproduction` MUST be forbidden and enforced.
+    mappings: [E-07, E-02]
+    evidence: Genome `ecology` and enforcement test.
+    verification: test
+  - id: REQ-COND-02
+    profile: Conditional
+    title: Federation and treaties
+    statement: If federation is allowed it MUST use treaties with identity, quotas, data-use policy, expiry and revocation; otherwise `ecology.federation` MUST be none.
+    mappings: [E-13, E-16, E-15]
+    evidence: Treaty records and revocation test.
+    verification: test
+  - id: REQ-COND-03
+    profile: Conditional
+    title: Horizontal transfer isolation
+    statement: If imports from other lineages are allowed they MUST pass provenance, compatibility and quarantine gates; otherwise `ecology.horizontal_transfer` MUST be forbidden.
+    mappings: [E-14, M-04]
+    evidence: Import-gate test.
+    verification: test

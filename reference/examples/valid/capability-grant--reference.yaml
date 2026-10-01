@@ -1,0 +1,17 @@
+id: grant-001
+subject: spiffe://example.org/cell/reasoning-cell-17
+capability: memory.read.approved
+resource: memory://semantic/approved
+constraints:
+  max_records: 50
+issuer: doa://reference-assistant-prod/organ/decision
+issued_at: '2026-10-01T12:00:00Z'
+expires_at: '2026-10-01T12:05:00Z'
+nonce: a1b2c3d4e5f6
+intent: task-123:answer-question
+revocable: true
+delegation:
+  depth: 1
+  max_depth: 2
+  parent_grant_id: grant-000
+signature_ref: sigstore://example/grants/grant-001

@@ -2,7 +2,9 @@
 
 ## 1. Genome
 
-Genome — подписанный declarative desired state. Он описывает identity, organs, tissues, capabilities, invariants, topology, resources, lifecycle, homeostasis, security and adaptation bounds. Genome не содержит secrets.
+Genome — подписанный declarative desired state (`genome.schema.json`). Он описывает identity и trust root, boundary и внешние зависимости, organs, tissues, capabilities, invariants, topology, resources, homeostasis (`ControlLoopSpec`), security, memory policy, adaptation bounds, `growth_control`, `ecology`, `aging`, `recovery` и `termination`; для Embodied Profile — `embodiment`. Genome не содержит secrets.
+
+Условные требования схемы: Distributed требует `topology`; Embodied требует `embodiment`; Adaptive требует `learning_bounds`, `separation_of_duties`, `evaluation_set_ref`, `rollback_ref`. `adaptation.runtime_self_modification` MUST быть `false`.
 
 Properties:
 
@@ -35,12 +37,13 @@ Continuous integrity checks сравнивают observed artifacts/config с si
 
 ## 5. Controlled mutation
 
-Mutation — proposal, а не прямое изменение production:
+Mutation — proposal, а не прямое изменение production. Эволюционное изменение (genome) проходит машину `change` с class=evolution:
 
 ```text
-baseline -> variant -> simulation -> evaluation -> safety review
-         -> approval -> canary -> promotion | rollback
+OBSERVED -> PROPOSED -> SIMULATED -> EVALUATED -> APPROVED -> CANARY -> PROMOTED | ROLLED_BACK
 ```
+
+Обязательны: provenance предложения, safety checks (инварианты и safety constraints не нарушены), `LineageManifest`, rollback artifact, controlled deployment (canary) и distinct proposer/evaluator/approver. Изменение authority, инвариантов или safety constraints требует human approval. Learning (изменение adaptive parameters) — отдельный класс и не меняет genome (`MEMORY_AND_NERVOUS_SYSTEM.md`, раздел 6).
 
 ## 6. Selection
 
@@ -48,7 +51,9 @@ Variant оценивается по task quality, safety constraints, reliabilit
 
 ## 7. Reproduction and lineage
 
-Создание нового организма требует отдельной identity, trust root, resource budget and lifecycle. Offspring получает lineage manifest с parent genome/version, inherited artifacts and deliberate differences. Credential cloning запрещён.
+Создание нового организма требует отдельной identity, trust root, resource budget and lifecycle. Offspring получает `LineageManifest` (`lineage-manifest.schema.json`) с parent genome/version, inherited artifacts and deliberate differences. Credential cloning запрещён (`credential_cloning: false`). Reproduction разрешена только при `ecology.reproduction = plan-gated`; иначе `forbidden`.
+
+Импорт artifacts, skills или моделей из другого lineage (horizontal transfer) допускается только при `ecology.horizontal_transfer = quarantine-gated` и проходит provenance, compatibility и quarantine gates (E-14); иначе запрещён — это reproductive isolation. Расхождение реплик и lineage без отбора (genetic drift, E-10) обнаруживается сверкой digest с signed genome и устраняется reconcile из trusted source.
 
 ## 8. Anti-patterns
 
@@ -58,3 +63,7 @@ Variant оценивается по task quality, safety constraints, reliabilit
 - production traffic одновременно является uncontrolled training set;
 - rollback depends on the same corrupted storage/control path;
 - undocumented epigenetic overlay becomes permanent architecture.
+
+## 9. Идентичность и lineage
+
+Identity организма не меняется при замене компонентов: непрерывность обеспечивается `LineageManifest.identity_continuity` (`continuous`, `rotated`, `new-identity`) и подписанными continuity records; подробности — `BOUNDARY_AND_IDENTITY.md`. Terminated сущности получают tombstone; восстановление из состояния до tombstone запрещено.

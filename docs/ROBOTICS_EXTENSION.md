@@ -4,6 +4,24 @@
 
 Embodied Profile добавляет physical sensors, actuators, real-time deadlines, energy/thermal limits and hazards. Он не отменяет отраслевые safety standards и certification.
 
+## 1.1 Единая модель
+
+Robotics extension не вводит отдельной архитектуры: физическое воплощение — тот же контур DOA с дополнительными ограничениями.
+
+```text
+Perception -> State -> Decision -> Action -> Feedback
+```
+
+| Звено | DOA-механизм | Embodied-ограничение |
+|---|---|---|
+| Perception | N-01 `Observation`, R-01 sensor fusion, R-02 modality | calibration, covariance/uncertainty, `UNCERTAIN` при расхождении |
+| State | N-02 proprioception, R-05 body schema и frame | версионированная map/frame, freshness |
+| Decision | N-05 cortex (proposal), N-06 decision service | модель не единственный разрешающий компонент |
+| Action | N-07 motor hierarchy, R-03 actuator envelope | bounded envelope, deadline, независимый interlock |
+| Feedback | N-01 + H-01 homeostasis | watchdog, latency budget, energy/thermal регуляция |
+
+Дополнительные ограничения: physical safety (R-04), actuator constraints (R-03), latency (real-time budget, REQ-EMB-03), calibration (R-01), embodiment (`genome.spec.embodiment`), environmental uncertainty (UNCERTAIN/LIMITED состояния). Safety states — машина `embodied_safety` (`specifications/state-machines.yaml`, `diagrams/embodied-safety.md`).
+
 ## 2. Command path
 
 ```text
@@ -30,10 +48,12 @@ Command содержит actuator, coordinate frame, bounded magnitude/speed/for
 ## 5. Safety states
 
 ```text
-INIT -> CALIBRATING -> READY -> ACTIVE
-ACTIVE -> LIMITED -> SAFE_STOP -> LOCKED_OUT
+INIT -> CALIBRATING -> READY -> ACTIVE <-> LIMITED
+ACTIVE | LIMITED -> SAFE_STOP -> LOCKED_OUT
 LOCKED_OUT -> INSPECTED -> RESET_AUTHORIZED -> CALIBRATING
 ```
+
+Переходы с guards, authority и timeouts — `docs/LIFECYCLE.md`, раздел 10.
 
 Emergency stop и hard limit реализуются независимо от LLM, network control plane and high-level planner.
 

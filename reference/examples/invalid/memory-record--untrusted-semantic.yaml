@@ -1,0 +1,25 @@
+id: mem-001
+memory_type: semantic
+content_ref: object://semantic/fact-42
+provenance:
+  source: doa://reference-assistant-prod/ingress/verified-docs
+  recorded_at: '2026-10-01T11:00:00Z'
+  trust_class: UNKNOWN
+  integrity:
+    algorithm: sha256
+    digest: '0000000000000000000000000000000000000000000000000000000000000000'
+confidence: 0.82
+decay:
+  half_life: 90d
+  floor: 0.2
+validity:
+  valid_from: '2026-10-01T11:00:00Z'
+  valid_until: '2027-10-01T11:00:00Z'
+classification: internal
+retention:
+  policy: semantic-default
+  expires_at: '2027-10-01T11:00:00Z'
+  legal_hold: false
+consent: not-required
+supersedes:
+- mem-000

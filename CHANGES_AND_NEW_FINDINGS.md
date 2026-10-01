@@ -92,3 +92,28 @@ Security controls сами могут стать источником отказ
 ## Влияние на v1.0
 
 Новые находки включены в нормативный реестр, схемы, reference architecture и conformance evidence. Они не создают зависимость от `AI-Engineering-Control-Plane` и не объявляют конкретный runtime каноническим.
+
+## Финализация v1.0.0 (аудит полноты)
+
+Самостоятельный аудит матрицы на предмет архитектурных пробелов выявил следующие проблемы; все устранены в `v1.0.0`.
+
+### Структурные пробелы матрицы
+
+- матрица содержала 8 колонок без отдельных Observability и Evidence и без нормативного статуса строки; теперь 12 колонок, стабильные ID и `Profile`;
+- отсутствовали строки: self/non-self recognition, immune memory, necrosis, cellular stress response, nutrient/oxygen sensing, compartmentalization, positive feedback, forgetting/decay, motor hierarchy, peripheral ganglia (distributed cognition), synchronization, provenance, identity continuity, state continuity/anti-resurrection, organism termination, organism-scale regeneration, genetic drift, model/behavioral drift, horizontal transfer и reproductive isolation, sensor fusion/calibration, actuator envelope, safe-stop reflex;
+- дублирующие строки (`Endocrine signals` и `Endocrine axis`) объединены; механизмы без архитектурной необходимости (polarity, fever, fibrosis, heart и др.) помечены `Pattern`.
+
+### Несогласованности и дефекты контрактов
+
+- cell lifecycle в стандарте (`SNAPSHOTTED`, `CREDENTIALS_REVOKED`), схеме и диаграмме расходились; введены единые state machines, apoptosis как `TERMINATING`, necrosis как `FAILED`, `STRESSED` и `SENESCENT`;
+- `CapabilityGrant`, `MemoryRecord`, `HealthEvidence` были нормативными контрактами без схем; добавлены схемы, а также `ControlLoopSpec`, `PolicyOverlay`, `LineageManifest`, lifecycle-событие и `ConformanceClaim`;
+- genome schema не проверяла homeostasis loops, termination, memory, boundary; добавлены обязательные разделы и условные требования по профилям;
+- `format: date-time`/`uri` не проверялись без дополнительных пакетов; заменены паттернами;
+- пример genome не содержал controller, hysteresis, override из §11 стандарта;
+- термин HomeostaticSignal/HormoneSignal использовался как два имени одного контракта; зафиксирован канонический термин;
+- у иммунного ответа отсутствовали этапы eradicate/recover/learn/update defenses;
+- learning и evolution смешивались в двух разных протоколах; введён единый `change` с классами.
+
+### Новые документы
+
+`BOUNDARY_AND_IDENTITY.md` (граница организма и identity), `LIFECYCLE.md` (state machines, старение, завершение), `FAILURE_AND_RECOVERY.md` (таксономия восстановления, 25 классов отказа, runaway growth), `CONFORMANCE.md` (требования и evidence), `TERMINOLOGY.md` (нормативный язык и глоссарий).

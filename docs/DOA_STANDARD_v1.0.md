@@ -2,9 +2,13 @@
 
 **Идентификатор:** `DOA-FS-1.0`
 
-**Дата фиксации:** 2026-09-29
+**Версия релиза:** v1.0.0
+
+**Дата фиксации:** 2026-10-01
 
 **Статус:** Canonical / Foundational Standard
+
+Нормативный язык (MUST/SHOULD/MAY), статус документов и глоссарий — в [TERMINOLOGY.md](TERMINOLOGY.md).
 
 ## 1. Назначение и границы
 
@@ -25,19 +29,20 @@ DOA применим к LLM-сервисам, multi-agent systems, автоно�
 
 ```text
 Biological mechanism
-  -> system responsibility
+  -> digital responsibility
   -> digital component
-  -> digital contract
-  -> state machine or protocol
-  -> observability invariant
-  -> failure modes
-  -> security implications
-  -> possible implementation stack
+  -> contract
+  -> protocol / state machine
+  -> invariant
+  -> failure mode
+  -> security / safety control
+  -> observability
+  -> evidence
 ```
 
 Если хотя бы одно обязательное поле отсутствует, термин считается только метафорой и MUST NOT использоваться как доказательство соответствия DOA.
 
-Полный реестр приведён в `BIOLOGY_TO_IT_MAPPING.md`.
+Полный реестр (канонная матрица) приведён в [BIOLOGY_TO_IT_MAPPING.md](BIOLOGY_TO_IT_MAPPING.md). Колонка `Profile` определяет нормативный статус строки: `Core` и профильные строки — MUST; `Pattern` — SHOULD/MAY; `Conditional` — MUST, если возможность допущена; `Anti-pattern` — обязательный контроль обнаружения и ограничения.
 
 ## 3. Базовые сущности
 
@@ -54,7 +59,12 @@ Biological mechanism
 | Phenotype | наблюдаемое runtime-поведение конкретного deployment |
 | Signal | адресное или широковещательное сообщение с provenance, TTL и schema |
 | Memory | управляемое состояние с retention, provenance, confidence и access policy |
-| Immune event | наблюдение о нарушении доверия, целостности или policy |
+| Immune event | наблюдение о нарушении доверия, целостности или policy; вход в incident |
+| Incident | жизненный цикл иммунного ответа (`LIFECYCLE.md`) |
+| Lease / Epoch / Tombstone | истекающее право существования, номер членства для fencing, подписанная запись о завершённой сущности |
+| Symbiont | допущенный guest (plugin, tool, agent) с quota и revocation |
+
+Границы организма, identity и trust boundaries определены в [BOUNDARY_AND_IDENTITY.md](BOUNDARY_AND_IDENTITY.md).
 
 ## 4. Конституционные инварианты
 
@@ -72,6 +82,8 @@ Biological mechanism
 10. **Observable lifecycle:** создание, активация, деградация, quarantine и termination оставляют audit evidence.
 11. **Human authority:** high-impact side effects имеют явно определённую authority model и approval boundary.
 12. **Truthful uncertainty:** отсутствие сигнала не трактуется как здоровье; неизвестное состояние обозначается явно.
+13. **Bounded growth:** число клеток, глубина spawn и делегирования, скорость репликации и потребление ресурсов ограничены genome и могут быть прекращены authority вне растущего компонента.
+14. **Identity continuity:** identity организма сохраняется при замене компонентов подписанной цепочкой continuity; завершённая или отозванная сущность не может быть воскрешена из устаревшего состояния.
 
 ## 5. Иерархия и planes
 
@@ -116,25 +128,31 @@ Planes логически разделяются. Они MAY совместно 
 
 Consumers MUST validate schema, identity, freshness, replay policy, authorization and size before processing.
 
+Схема: `specifications/event.schema.json`. `integrity` с `signature_ref` MUST присутствовать для `confidential` и `restricted`.
+
 ### 6.2 CapabilityGrant
 
 ```text
-subject + capability + resource + constraints + issuer + issued_at + expires_at + nonce + signature
+subject + capability + resource + constraints + issuer + issued_at + expires_at + nonce + intent + delegation + signature
 ```
 
-Grant MUST be narrow, expiring, revocable and bound to an auditable intent.
+Схема: `capability-grant.schema.json`. Grant MUST be narrow, expiring, revocable and bound to an auditable intent. Делегированный grant MUST быть подмножеством родительского (attenuation), а глубина делегирования MUST NOT превышать `growth_control.max_delegation_depth`.
 
-### 6.3 HomeostaticSignal
+### 6.3 HormoneSignal (также называемый HomeostaticSignal)
 
 ```text
-variable + observed + target_range + severity + scope + action_budget + ttl + issuer + signature
+variable + observed + target_range + severity + scope + action_budget + issuer + issued_at + expires_at + reversal + signature
 ```
+
+Схема: `hormone.schema.json`. Сигнал MUST истекать (`expires_at`) и описывать reversal. Это один и тот же контракт; термин «HomeostaticSignal» использовать как синоним не следует.
 
 ### 6.4 MemoryRecord
 
 ```text
-content_ref + type + provenance + confidence + classification + retention + consent + supersedes
+content_ref + memory_type + provenance + confidence + decay + classification + retention + consent + supersedes
 ```
+
+Схема: `memory-record.schema.json`. Для `semantic` и `procedural` записей `trust_class` MUST NOT быть `UNKNOWN`; `procedural` требует `approval_ref`.
 
 ### 6.5 HealthEvidence
 
@@ -142,37 +160,35 @@ content_ref + type + provenance + confidence + classification + retention + cons
 component + startup + readiness + liveness + correctness + freshness + dependencies + observed_at
 ```
 
-`liveness=true` MUST NOT imply semantic correctness.
+Схема: `health-evidence.schema.json`. `liveness=PASS` MUST NOT imply semantic correctness; `correctness=PASS` MUST NOT быть заявлен при `liveness≠PASS`. Отсутствие данных — `UNKNOWN`.
+
+### 6.6 Остальные контракты
+
+`ControlLoopSpec` (`control-loop.schema.json`), `PolicyOverlay` (`policy-overlay.schema.json`), `LineageManifest` (`lineage-manifest.schema.json`), lifecycle-событие (`lifecycle-transition.schema.json`), `ConformanceClaim` (`conformance-claim.schema.json`), а также `Genome`, `Organ`, `Cell`, `Organism`.
 
 ## 7. Жизненный цикл организма
 
 ```text
-SPECIFIED
- -> VALIDATED
- -> PROVISIONING
- -> DEVELOPING
- -> READY
- -> ACTIVE
- -> STRESSED
- -> DEGRADED
- -> REPAIRING
- -> QUIESCENT
- -> RETIRING
- -> TERMINATED
+SPECIFIED -> VALIDATED -> PROVISIONING -> DEVELOPING -> READY -> ACTIVE
+ACTIVE <-> STRESSED -> DEGRADED -> REPAIRING -> ACTIVE
+ACTIVE -> QUIESCENT -> ACTIVE
+ACTIVE | DEGRADED -> SENESCENT -> REPAIRING | RETIRING
+ACTIVE | DEGRADED | QUIESCENT | SENESCENT -> RETIRING -> TERMINATED
 ```
 
-Переходы MUST иметь guard, authority, timeout и emitted event. `QUARANTINED` является orthogonal security state и может блокировать переходы из любого runtime-состояния.
+Полная машина с guards, authority и timeouts — `specifications/state-machines.yaml` и [LIFECYCLE.md](LIFECYCLE.md). Переходы MUST иметь guard, authority, timeout и emitted event. `QUARANTINED` является orthogonal security state (`organism.security_state`) и может блокировать переходы из любого runtime-состояния.
 
 ## 8. Жизненный цикл клетки
 
 ```text
 DECLARED -> ADMITTED -> PROVISIONED -> STARTING -> READY -> ACTIVE
-ACTIVE -> SUSPECT -> ISOLATED -> REPAIRING -> READY
-ISOLATED -> SNAPSHOTTED -> CREDENTIALS_REVOKED -> TERMINATED
-ACTIVE -> QUIESCENT -> HIBERNATED -> STARTING
+ACTIVE <-> STRESSED ; ACTIVE | STRESSED -> SUSPECT -> ISOLATED -> REPAIRING -> READY
+ACTIVE -> QUIESCENT -> HIBERNATED -> STARTING ; ACTIVE -> SENESCENT -> TERMINATING
+ACTIVE | STRESSED | SUSPECT | STARTING -> FAILED (necrosis) -> ISOLATED
+ISOLATED | REPAIRING | SENESCENT | READY | ACTIVE -> TERMINATING (apoptosis) -> TERMINATED
 ```
 
-Apoptosis MUST быть bounded shutdown protocol, а не произвольным удалением: stop admission, cancel/finish bounded work, revoke grants, preserve permitted forensic evidence, release resources, emit terminal record.
+Apoptosis (`TERMINATING`) MUST быть bounded shutdown protocol из 8 шагов, а не произвольным удалением: stop admission, cancel/finish bounded work, revoke grants, seal egress, preserve permitted forensic evidence, release resources, emit terminal record, verify absence of live grants. Necrosis (`FAILED`) — неконтролируемый отказ: клетка MUST быть fenced (lease expiry, revoke без её кооперации) до любого repair. Подробности — [LIFECYCLE.md](LIFECYCLE.md).
 
 ## 9. Развитие, морфогенез и дифференцировка
 
@@ -188,11 +204,14 @@ Morphogenesis задаёт topology: placement, connectivity, capacity и failur
 - spinal/reflex plane выполняет детерминированные low-latency реакции;
 - sensory system калибрует, timestamps, validates и оценивает uncertainty;
 - memory разделяется на working, episodic, semantic и procedural;
-- neuroplasticity означает версионируемое изменение routing/weights/skills с offline evaluation, canary и rollback.
+- motor hierarchy превращает решение в ограниченное действие: intent -> plan -> grant -> command -> feedback; исполнитель проверяет grant, deadline и idempotency;
+- peripheral (edge) компоненты MAY принимать локальные решения только в пределах `DelegationGrant` с attenuation, ограниченной глубиной и lease; при reconnect решения сверяются;
+- salience/attention — часть `RouteDecision` (priority, salience, budget) и MUST NOT повышать authority источника;
+- neuroplasticity означает версионируемое изменение routing/weights/skills с offline evaluation, canary и rollback (только learning, см. §14).
 
 ## 11. Гомеостаз и временная организация
 
-Каждый control loop MUST определять variable, target range, sampling interval, controller, actuator, action limits, hysteresis, recovery condition и manual override. Circadian/temporal policies задают расписание нагрузки, maintenance, consolidation и key rotation, но MUST учитывать timezone, missed tick, clock drift и emergency override.
+Каждый control loop MUST определять (`ControlLoopSpec`): variable, sensor с freshness, target range, thresholds, controller, actuator, action limits, hysteresis, escalation, recovery condition и manual override с ограниченной длительностью. Контуры с положительной обратной связью (усиление) MUST иметь ceiling, TTL и внешний terminator. Подробности и обязательные домены — [HOMEOSTASIS.md](HOMEOSTASIS.md). Circadian/temporal policies задают расписание нагрузки, maintenance, consolidation и key rotation, но MUST учитывать timezone, missed tick, clock drift и emergency override.
 
 ## 12. Иммунитет, воспаление и толерантность
 
@@ -202,21 +221,25 @@ Inflammation — ограниченное усиление telemetry, isolation 
 
 Tolerance — явно ограниченная policy для известных self/partner identities. Она не является allowlist без срока и MUST поддерживать revocation. Autoimmune failure — блокирование легитимных функций собственными controls.
 
+Иммунный ответ следует machine `incident`: `OBSERVED -> DETECTED -> IDENTIFIED -> CONTAINED -> QUARANTINED -> NEUTRALIZED -> RECOVERED -> LEARNED -> DEFENSES_UPDATED -> CLOSED` ([LIFECYCLE.md](LIFECYCLE.md), [SECURITY_AND_IMMUNITY.md](SECURITY_AND_IMMUNITY.md)).
+
 ## 13. Регенерация, старение и смерть
 
-Repair восстанавливает компонент из trusted desired state, а не клонирует потенциально повреждённое observed state. Regeneration использует clean image, signed genome, verified memory restore и post-repair validation.
+Repair восстанавливает компонент из trusted desired state, а не клонирует потенциально повреждённое observed state. Regeneration использует clean image, signed genome, verified memory restore и post-repair validation. Режимы восстановления различаются: `RESTART`, `RESTORE`, `REPAIR`, `REPLACE`, `REGENERATE`, `REBUILD`, `RECONFIGURE`, `ROLLBACK` ([FAILURE_AND_RECOVERY.md](FAILURE_AND_RECOVERY.md)); regeneration ≠ restart.
 
-Senescence означает перевод устаревшего или ненадёжного компонента в non-replicating, reduced-privilege state до замены. Retirement должен сохранять audit/provenance по retention policy. Неконтролируемое размножение, обход apoptosis и захват ресурсов классифицируются как oncological anti-patterns.
+Senescence означает перевод устаревшего или ненадёжного компонента в non-replicating, reduced-privilege state до замены. Retirement должен сохранять audit/provenance по retention policy, а завершённая сущность получает tombstone и MUST NOT быть воскрешена из устаревшего состояния. Неконтролируемое размножение, рекурсивное делегирование, обход apoptosis и захват ресурсов классифицируются как oncological anti-patterns и ограничиваются `growth_control` (инвариант 13).
 
 ## 14. Обучение и эволюция
 
-Online adaptation MUST быть ограничена параметрами, явно разрешёнными genome/policy. Изменения моделей, prompts, skills, routing или memory policy проходят:
+Learning ≠ Evolution. **Learning** меняет только declared adaptive parameters (`adaptation.learning_bounds`) и MUST NOT менять genome, инварианты, authority model или audit semantics. **Evolution** меняет genome и является отдельным классом изменения. Оба проходят machine `change`:
 
 ```text
-OBSERVE -> PROPOSE -> SIMULATE -> EVALUATE -> APPROVE -> CANARY -> PROMOTE | ROLLBACK
+OBSERVED -> PROPOSED -> (SIMULATED) -> EVALUATED -> APPROVED -> CANARY -> PROMOTED | ROLLED_BACK
 ```
 
-Наследование возможно только через signed versioned artifact. Fitness MUST быть многокритериальным: task value, safety, reliability, cost, latency и reversibility; один reward не является достаточным.
+`SIMULATED` обязательна для evolution. Proposer, evaluator и approver MUST быть разными authorities. Каждое изменение имеет rollback artifact; evolution дополнительно требует `LineageManifest` и новую подписанную genome version.
+
+Наследование возможно только через signed versioned artifact. Fitness MUST быть многокритериальным: task value, safety, reliability, cost, latency и reversibility; один reward не является достаточным, а safety constraints действуют как hard gates.
 
 ## 15. Резервирование и аварийное кровообращение
 
@@ -224,41 +247,47 @@ Critical organs MUST иметь declared redundancy mode: active-active, active-
 
 ## 16. Робототехнический профиль
 
-Физический actuator path MUST включать независимые safety interlocks, bounded command envelope, watchdog, emergency stop и safe-state definition. Generative model MUST NOT быть единственным компонентом, разрешающим опасное действие. Подробности — `ROBOTICS_EXTENSION.md`.
+Физический actuator path MUST включать независимые safety interlocks, bounded command envelope, watchdog, emergency stop и safe-state definition. Generative model MUST NOT быть единственным компонентом, разрешающим опасное действие. Robotics extension не вводит отдельной модели: он реализует ту же цепочку `Perception -> State -> Decision -> Action -> Feedback` с физическими ограничениями. Подробности — [ROBOTICS_EXTENSION.md](ROBOTICS_EXTENSION.md).
 
 ## 17. Conformance
 
 ### Core Profile
 
-Обязательны identity, boundary, genome/epigenome separation, cell lifecycle, homeostasis loop, immune/quarantine path, resource accounting, memory governance, observability и bounded termination.
+Обязательны identity, boundary, genome/epigenome separation, cell lifecycle (включая apoptosis и necrosis), homeostasis loop, immune/quarantine path, resource accounting, memory governance, recovery taxonomy, aging/senescence, identity continuity, growth control, observability и bounded termination.
 
 ### Distributed Profile
 
-Дополнительно обязательны event contract, partial-failure handling, idempotency, backpressure, topology/failure-domain placement, quorum/failover и clock assumptions.
+Дополнительно обязательны event contract, partial-failure handling, idempotency, backpressure, topology/failure-domain placement, quorum/failover с epoch fencing, clock assumptions, drift detection и catastrophic recovery.
 
 ### Adaptive Profile
 
-Дополнительно обязательны learning provenance, evaluation set governance, canary, rollback, drift detection и separation of proposer/evaluator/approver.
+Дополнительно обязательны learning provenance, evaluation set governance, canary, rollback, drift detection, разделение learning/evolution и separation of proposer/evaluator/approver.
 
 ### Embodied Profile
 
 Дополнительно обязательны real-time budget, calibrated sensors, actuator interlocks, physical safe state, independent watchdog и hazard analysis.
 
-Система MUST публиковать conformance claim с profile, exclusions, evidence и date. Claim без evidence считается `UNVERIFIED`.
+### Conditional capabilities
+
+Reproduction, federation и horizontal transfer либо контролируются соответствующими requirements, либо явно запрещены в genome (`ecology`).
+
+Система MUST публиковать conformance claim с profile, exclusions, evidence и date. Реестр требований — `specifications/requirements.yaml`; правила статусов `UNVERIFIED`/`PARTIAL`/`VERIFIED` и evidence — [CONFORMANCE.md](CONFORMANCE.md). Claim без evidence считается `UNVERIFIED`.
 
 ## 18. Минимальный evidence pack
 
 - подписанный genome и применённый epigenome snapshot;
 - inventory клеток/органов и trust boundaries;
 - schemas для events, cells, organs и organism;
-- state-transition logs;
+- state-transition logs, валидные по `lifecycle-transition.schema.json`;
 - SLO, homeostatic targets и alert-to-action traces;
 - fault-injection или controlled failure evidence;
-- quarantine/apoptosis test;
-- restore/rollback test;
+- quarantine/apoptosis/necrosis(fencing) tests;
+- restore/rollback tests;
 - security threat model и access-policy test;
 - learning/change provenance для Adaptive Profile;
 - hazard evidence для Embodied Profile.
+
+Подробная привязка evidence к требованиям — [CONFORMANCE.md](CONFORMANCE.md).
 
 ## 19. Ограничение канонической терминологии
 
@@ -266,4 +295,4 @@ DOA — метаархитектурный стандарт. Название DO
 
 ## 20. Источники и инженерная основа
 
-Биологические соответствия опираются на базовые принципы compartmentalization, specialization, signaling, homeostasis, repair и evolution; инженерные механизмы — на проверяемые contracts, zero trust, distributed systems, observability и safety engineering. Ссылки собраны в `SOURCES.md`. Биологический источник объясняет функцию, но не доказывает пригодность конкретной IT-реализации.
+Биологические соответствия опираются на базовые принципы compartmentalization, specialization, signaling, homeostasis, repair и evolution; инженерные механизмы — на проверяемые contracts, zero trust, distributed systems, observability и safety engineering. Ссылки собраны в [SOURCES.md](SOURCES.md). Биологический источник объясняет функцию, но не доказывает пригодность конкретной IT-реализации.

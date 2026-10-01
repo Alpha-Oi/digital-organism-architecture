@@ -1,0 +1,120 @@
+id: reference-assistant-prod
+genome_ref: reference-assistant@1.0.0
+profiles:
+- Core
+- Distributed
+state: TERMINATED
+security_state: NORMAL
+epoch: 3
+lineage_ref: lineage://reference-assistant-prod
+organs:
+- id: cognition
+  version: 1.0.0
+  responsibility: Produce grounded answer proposals from approved context
+  interfaces:
+  - name: plan-request
+    direction: in
+    schema_ref: schemas/plan-request.v1.json
+  - name: answer-proposal
+    direction: out
+    schema_ref: schemas/answer-proposal.v1.json
+  dependencies:
+  - memory
+  - policy
+  optional_dependencies:
+  - foundation-model-provider
+  slo:
+    availability: 99.9%
+    p95_latency: 8s
+  resources:
+    max_concurrency: 20
+    token_budget_per_task: 32000
+  security:
+    identity: spiffe://example.org/organ/cognition
+    capabilities:
+    - memory.read.approved
+    data_classes:
+    - internal
+  health:
+    readiness: model-loaded-and-policy-reachable
+    liveness: event-loop-responsive
+    semantic: grounded-evaluation-sample
+  failure_policy: degrade
+  critical: true
+  redundancy:
+    mode: active-active
+    min_replicas: 2
+    failure_domains:
+    - zone
+  recovery:
+    modes:
+    - RESTART
+    - REPLACE
+    - ROLLBACK
+    - REGENERATE
+    source_of_truth: oci://registry.example.org/doa/cognition@sha256:0000000000000000000000000000000000000000000000000000000000000000
+    rto: 10m
+    rpo: 0s
+    validation: signed-artifact-plus-smoke-evaluation
+  owner: ai-platform
+cells:
+- id: reasoning-cell-17
+  type: reasoning-cell-v1
+  tissue: reasoning-workers
+  artifact:
+    uri: oci://registry.example.org/doa/reasoning-cell
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    attestation_ref: in-toto://example/reasoning-cell/1.0.0
+  genome_ref: reference-assistant@1.0.0
+  expression_profile: reasoning-default
+  capabilities:
+  - memory.read.approved
+  data_scopes:
+  - internal
+  resources:
+    requests:
+      cpu_ms: 500
+    limits:
+      cpu_ms: 2000
+    cost_budget: 2.5
+  lineage:
+    parent_id: reasoning-workers-controller
+    generation: 1
+    spawn_budget: 0
+  lifecycle:
+    state: ACTIVE
+    lease_expires_at: '2026-10-01T12:05:00Z'
+  health:
+    startup: passed
+    readiness: model-loaded
+    liveness: event-loop-responsive
+    semantic: grounded-evaluation-sample
+  termination:
+    grace_seconds: 30
+    revoke_capabilities: true
+    forensic_policy: metadata-only
+effective_policy:
+  genome_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  overlay_digests: []
+observed_at: '2026-10-01T12:00:00Z'
+health_evidence:
+- component: cognition
+  startup: PASS
+  readiness: PASS
+  liveness: PASS
+  correctness: PASS
+  freshness:
+    age_ms: 1200
+    max_age_ms: 30000
+  dependencies:
+  - id: memory
+    status: PASS
+  - id: foundation-model-provider
+    status: UNKNOWN
+  observed_at: '2026-10-01T12:00:00Z'
+conformance:
+  standard: DOA-FS-1.0
+  status: UNVERIFIED
+  exclusions: []
+  evidence_ref: evidence://none
+  verified_at: '2026-10-01T12:00:00Z'

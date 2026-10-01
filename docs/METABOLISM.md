@@ -10,6 +10,8 @@ utility = expected_task_value / (compute + latency + monetary + risk cost)
 
 Эта формула является decision aid, а не универсальной функцией ценности; safety constraints не оптимизируются через простой trade-off.
 
+Доступность ресурсов ощущается явно (M-14, nutrient и oxygen sensing): `ResourceAvailabilitySignal` переводит организм между режимами `anabolic` (рост и spawn допустимы) и `catabolic` (рост блокируется, неважная работа сворачивается, resource reclamation). Admission controller MUST отклонять spawn и расширение при дефиците независимо от запроса компонента. Исчерпание ресурса — failure class F-15.
+
 ## 2. Ingestion / digestion
 
 ```text

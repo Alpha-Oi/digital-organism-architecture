@@ -4,9 +4,9 @@
 
 ## 1.0.x — Clarifications
 
-- исправления неоднозначностей без изменения semantics;
-- дополнительные schema examples и conformance claim template;
-- validator для cross-file references и JSON Schema.
+- исправления неоднозначностей без изменения semantics (errata);
+- дополнительные schema examples;
+- внешний peer review биологических соответствий и evidence первых claims.
 
 ## 1.1 — Verification Kit
 

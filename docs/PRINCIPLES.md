@@ -59,3 +59,15 @@ Barrier, receptors, innate immunity, adaptive immunity, quarantine и repair н�
 ## P15. Conformance is evidence, not branding
 
 Заявление о соответствии указывает profile, exclusions, verified checks и дату.
+
+## P16. Growth is bounded
+
+Рост числа клеток, глубины делегирования, репликации и потребления ресурсов ограничен genome и может быть прекращён authority вне растущего компонента.
+
+## P17. Identity outlives components
+
+Identity организма сохраняется при замене любых компонентов подписанной цепочкой continuity; завершённая сущность не воскресает из устаревшего состояния.
+
+## P18. Learning is not evolution
+
+Обучение меняет только declared adaptive parameters; изменение genome — отдельный, более строгий контур.

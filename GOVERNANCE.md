@@ -47,7 +47,18 @@ Consensus предпочтителен. При его отсутствии maint
 - Minor: additive backwards-compatible contracts и profiles.
 - Major: несовместимые normative changes или пересмотр conformance semantics.
 
-Документ `DOA_STANDARD_v1.0.md` после tag `v1.0.0` считается frozen. Исправления выпускаются новой версией, а не переписыванием истории tag.
+Документ `DOA_STANDARD_v1.0.md` после tag `v1.0.0` считается frozen: tag не переписывается, а нормативное содержание не меняется на месте. Исправления выпускаются новой версией (`1.0.x` для errata, `1.x` для additive, `2.0` для breaking).
+
+### Политика совместимости
+
+- Идентификаторы механизмов (`C-01`…), требований (`REQ-…`), схем (`$id`) и состояний в `state-machines.yaml` стабильны в пределах major-версии: удаление или переименование — только в major.
+- Minor-релиз MAY добавлять механизмы, требования, необязательные поля схем и состояния/переходы, не делающие существующие допустимые реализации недействительными. Новое обязательное требование для существующего профиля считается breaking; оно вводится как `Pattern`/optional либо в major.
+- Patch-релиз содержит только clarifications, исправления опечаток и errata без изменения semantics.
+- Дефект (противоречие между документами) исправляется errata по порядку приоритета из `docs/TERMINOLOGY.md`.
+
+### Normative changes
+
+Изменение `MUST`/`MUST NOT`, contract, state machine, схемы или conformance profile проходит: issue (concrete scenario, observable outcome) → proposal с полной карточкой Biology-to-IT (12 колонок) → review архитектуры, security и compatibility → обновление реестра требований, примеров valid/invalid, `CHANGELOG.md` → прохождение `scripts/validate_repository.py` → решение maintainer с документированным несогласием.
 
 ## 5. Release gates
 
@@ -60,11 +71,14 @@ Release MUST иметь:
 - review normative diff;
 - release-readiness status `ГОТОВО`;
 - отсутствие known blocking security или compatibility defects;
-- owner approval на tag и GitHub Release.
+- `VERSION`, `CHANGELOG.md`, README и канонический стандарт указывают одну версию;
+- tag `vX.Y.Z` указывает на commit, на котором прошёл validation workflow; owner approval на tag и GitHub Release.
+
+Рекомендуемая защита `main`: pull request с review (CODEOWNERS), обязательный status check `validate`, запрет force-push и удаления ветки, защита tags `v*`. Это настройки репозитория, а не содержимое стандарта.
 
 ## 6. Conformance claims
 
-Claim принадлежит реализации, а не DOA repository. Он MUST указывать standard version, profiles, scope, exclusions, evidence, verification date и responsible owner. Статусы: `UNVERIFIED`, `PARTIAL`, `VERIFIED`.
+Claim принадлежит реализации, а не DOA repository. Он MUST указывать standard version, profiles, scope, exclusions, evidence, verification date, assessor и responsible owner. Статусы: `UNVERIFIED`, `PARTIAL`, `VERIFIED`. Соответствие определяется не наличием термина «DOA», а требованиями `specifications/requirements.yaml` и evidence по `docs/CONFORMANCE.md`; claim проверяется `scripts/check_conformance_claim.py`. DOA repository не сертифицирует реализации.
 
 ## 7. Security and disclosure
 

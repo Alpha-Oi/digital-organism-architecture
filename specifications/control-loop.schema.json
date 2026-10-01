@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/control-loop.schema.json",
+  "title": "DOA ControlLoopSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "variable",
+    "sensor",
+    "target_range",
+    "controller",
+    "actuators",
+    "limits",
+    "recovery",
+    "fallback",
+    "override"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"
+    },
+    "variable": {
+      "type": "string",
+      "minLength": 1
+    },
+    "unit": {
+      "type": "string"
+    },
+    "sensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "interval",
+        "freshness_max"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interval": {
+          "type": "string",
+          "pattern": "^[0-9]+(ms|s|m|h)$"
+        },
+        "freshness_max": {
+          "type": "string",
+          "pattern": "^[0-9]+(ms|s|m|h)$"
+        },
+        "independent_source": {
+          "type": "string"
+        }
+      }
+    },
+    "target_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "lower": {
+          "type": "number"
+        },
+        "upper": {
+          "type": "number"
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "warning": {
+          "type": "number"
+        },
+        "critical": {
+          "type": "number"
+        },
+        "safety_ceiling": {
+          "type": "number"
+        }
+      }
+    },
+    "controller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy",
+        "hysteresis"
+      ],
+      "properties": {
+        "policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hysteresis": {
+          "type": "number",
+          "minimum": 0
+        },
+        "deadband": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "actuators": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_step",
+        "max_actions_per_minute"
+      ],
+      "properties": {
+        "max_step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_actions_per_minute": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "amplification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ceiling",
+        "ttl"
+      ],
+      "properties": {
+        "ceiling": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ttl": {
+          "type": "string",
+          "pattern": "^[0-9]+(ms|s|m|h)$"
+        },
+        "terminator": {
+          "type": "string"
+        }
+      }
+    },
+    "escalation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "level",
+          "condition",
+          "action"
+        ],
+        "properties": {
+          "level": {
+            "enum": [
+              "WARNING",
+              "CRITICAL",
+              "EMERGENCY"
+            ]
+          },
+          "condition": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stable_for"
+      ],
+      "properties": {
+        "stable_for": {
+          "type": "string",
+          "pattern": "^[0-9]+(ms|s|m|h)$"
+        },
+        "criterion": {
+          "type": "string"
+        }
+      }
+    },
+    "fallback": {
+      "enum": [
+        "freeze-and-escalate",
+        "fail-closed",
+        "degrade",
+        "safe-state"
+      ]
+    },
+    "override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "max_duration"
+      ],
+      "properties": {
+        "authority": {
+          "type": "string",
+          "minLength": 1
+        },
+        "max_duration": {
+          "type": "string",
+          "pattern": "^[0-9]+(ms|s|m|h|d)$"
+        }
+      }
+    }
+  }
+}

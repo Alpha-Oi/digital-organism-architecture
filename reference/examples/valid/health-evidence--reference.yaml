@@ -1,0 +1,14 @@
+component: cognition
+startup: PASS
+readiness: PASS
+liveness: PASS
+correctness: PASS
+freshness:
+  age_ms: 1200
+  max_age_ms: 30000
+dependencies:
+- id: memory
+  status: PASS
+- id: foundation-model-provider
+  status: UNKNOWN
+observed_at: '2026-10-01T12:00:00Z'

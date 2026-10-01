@@ -1,0 +1,124 @@
+# DOA canonical state machines (normative, machine-readable).
+# Schemas, diagrams and documents MUST agree with this file; scripts/validate_repository.py enforces it.
+# Every transition MUST emit `doa.lifecycle.<entity>.transitioned.v1` (see lifecycle-transition.schema.json).
+standard: DOA-FS-1.0
+machines:
+  organism:
+    description: Runtime lifecycle of a digital organism (Birth -> Development -> Maturity -> Aging -> Termination).
+    initial: SPECIFIED
+    terminal: [TERMINATED]
+    states: [SPECIFIED, VALIDATED, PROVISIONING, DEVELOPING, READY, ACTIVE, STRESSED, DEGRADED, REPAIRING, QUIESCENT, SENESCENT, RETIRING, TERMINATED]
+    transitions:
+      - {from: SPECIFIED, to: VALIDATED, guard: genome schema-valid and signature verified, authority: genome owner via change service, timeout: 1h}
+      - {from: VALIDATED, to: PROVISIONING, guard: trust root and budget available, authority: provisioning controller, timeout: 1h}
+      - {from: PROVISIONING, to: DEVELOPING, guard: substrate and identity issued, authority: development controller, timeout: 30m}
+      - {from: DEVELOPING, to: READY, guard: all developmental checkpoints passed, authority: development controller, timeout: 1h}
+      - {from: READY, to: ACTIVE, guard: readiness and semantic health evidence present, authority: organism controller, timeout: 10m}
+      - {from: ACTIVE, to: STRESSED, guard: homeostatic variable outside target range, authority: homeostasis controller, timeout: 1m}
+      - {from: STRESSED, to: ACTIVE, guard: recovery criterion met for stable_for window, authority: homeostasis controller, timeout: 1h}
+      - {from: STRESSED, to: DEGRADED, guard: stress exceeds TTL or safety ceiling reached, authority: homeostasis controller, timeout: 15m}
+      - {from: ACTIVE, to: DEGRADED, guard: critical organ lost or in degraded mode, authority: homeostasis controller, timeout: 5m}
+      - {from: DEGRADED, to: REPAIRING, guard: repair plan authorized from trusted source, authority: repair controller, timeout: 15m}
+      - {from: REPAIRING, to: ACTIVE, guard: post-repair validation passed, authority: repair controller, timeout: 4h}
+      - {from: REPAIRING, to: DEGRADED, guard: repair attempt failed within retry budget, authority: repair controller, timeout: 4h}
+      - {from: REPAIRING, to: PROVISIONING, guard: catastrophic recovery with restored trust root and continuity record, authority: human authority plus repair controller, timeout: 24h}
+      - {from: ACTIVE, to: QUIESCENT, guard: maintenance window or operator request, authority: organism controller, timeout: 1h}
+      - {from: QUIESCENT, to: ACTIVE, guard: policy and genome revalidated on wake, authority: organism controller, timeout: 10m}
+      - {from: ACTIVE, to: SENESCENT, guard: AgingIndex above senescence threshold, authority: lifecycle controller, timeout: 24h}
+      - {from: DEGRADED, to: SENESCENT, guard: AgingIndex above threshold and repair not economical, authority: lifecycle controller, timeout: 24h}
+      - {from: SENESCENT, to: REPAIRING, guard: replacement plan approved, authority: lifecycle controller, timeout: 24h}
+      - {from: SENESCENT, to: RETIRING, guard: retirement decision recorded, authority: human authority, timeout: 7d}
+      - {from: ACTIVE, to: RETIRING, guard: retirement decision recorded, authority: human authority, timeout: 7d}
+      - {from: DEGRADED, to: RETIRING, guard: retirement decision recorded, authority: human authority, timeout: 7d}
+      - {from: QUIESCENT, to: RETIRING, guard: retirement decision recorded, authority: human authority, timeout: 7d}
+      - {from: RETIRING, to: TERMINATED, guard: grants revoked and audit sealed and tombstone issued, authority: lifecycle controller, timeout: 7d}
+  cell:
+    description: Runtime lifecycle of a cell; apoptosis is the TERMINATING sequence, necrosis is the FAILED path.
+    initial: DECLARED
+    terminal: [TERMINATED]
+    states: [DECLARED, ADMITTED, PROVISIONED, STARTING, READY, ACTIVE, STRESSED, SUSPECT, ISOLATED, REPAIRING, QUIESCENT, HIBERNATED, SENESCENT, FAILED, TERMINATING, TERMINATED]
+    transitions:
+      - {from: DECLARED, to: ADMITTED, guard: admission passed (quota and signature and lineage budget), authority: admission controller, timeout: 1m}
+      - {from: DECLARED, to: TERMINATED, guard: admission denied, authority: admission controller, timeout: 1m}
+      - {from: ADMITTED, to: PROVISIONED, guard: resources reserved and grants issued, authority: scheduler, timeout: 5m}
+      - {from: PROVISIONED, to: STARTING, guard: artifact digest matches genome, authority: scheduler, timeout: 5m}
+      - {from: STARTING, to: READY, guard: startup and readiness checks passed, authority: cell supervisor, timeout: 5m}
+      - {from: STARTING, to: FAILED, guard: startup deadline exceeded or crash, authority: cell supervisor, timeout: 5m}
+      - {from: READY, to: ACTIVE, guard: lease valid and discovery endpoint published, authority: cell supervisor, timeout: 1m}
+      - {from: ACTIVE, to: STRESSED, guard: local stress response triggered, authority: cell supervisor, timeout: 1m}
+      - {from: STRESSED, to: ACTIVE, guard: stress resolved within TTL, authority: cell supervisor, timeout: 15m}
+      - {from: STRESSED, to: SUSPECT, guard: stress TTL exceeded or integrity doubt, authority: cell supervisor, timeout: 15m}
+      - {from: ACTIVE, to: SUSPECT, guard: semantic or integrity or security anomaly, authority: immune system or watchdog, timeout: 1m}
+      - {from: SUSPECT, to: ACTIVE, guard: false positive cleared with evidence, authority: immune system, timeout: 30m}
+      - {from: SUSPECT, to: ISOLATED, guard: containment decision, authority: immune system, timeout: 1m}
+      - {from: ISOLATED, to: REPAIRING, guard: repair source trusted and independent, authority: repair controller, timeout: 15m}
+      - {from: REPAIRING, to: READY, guard: attestation and functional check passed, authority: repair controller, timeout: 1h}
+      - {from: REPAIRING, to: TERMINATING, guard: repair failed or retry budget exhausted, authority: repair controller, timeout: 1h}
+      - {from: ISOLATED, to: TERMINATING, guard: unsafe or unrepairable, authority: immune system, timeout: 1m}
+      - {from: ACTIVE, to: QUIESCENT, guard: drain complete, authority: cell supervisor, timeout: 5m}
+      - {from: QUIESCENT, to: ACTIVE, guard: lease renewed and policy revalidated, authority: cell supervisor, timeout: 5m}
+      - {from: QUIESCENT, to: HIBERNATED, guard: idle beyond hibernation threshold, authority: scheduler, timeout: 1h}
+      - {from: HIBERNATED, to: STARTING, guard: wake request authorized, authority: scheduler, timeout: 5m}
+      - {from: ACTIVE, to: SENESCENT, guard: cell age or dependency end-of-life reached, authority: lifecycle controller, timeout: 1h}
+      - {from: SENESCENT, to: TERMINATING, guard: replacement cell ready, authority: lifecycle controller, timeout: 24h}
+      - {from: READY, to: TERMINATING, guard: scale-in or retirement, authority: scheduler, timeout: 5m}
+      - {from: ACTIVE, to: TERMINATING, guard: scale-in or retirement or apoptosis trigger, authority: scheduler or immune system, timeout: 5m}
+      - {from: ACTIVE, to: FAILED, guard: uncontrolled crash or lease lost, authority: cell supervisor or lease expiry, timeout: 1m}
+      - {from: STRESSED, to: FAILED, guard: uncontrolled crash or lease lost, authority: cell supervisor or lease expiry, timeout: 1m}
+      - {from: SUSPECT, to: FAILED, guard: uncontrolled crash or lease lost, authority: cell supervisor or lease expiry, timeout: 1m}
+      - {from: FAILED, to: ISOLATED, guard: fenced by lease expiry and grants revoked, authority: immune system or lease expiry, timeout: 1m}
+      - {from: TERMINATING, to: TERMINATED, guard: apoptosis steps 1-8 completed and terminal record emitted, authority: lifecycle controller, timeout: 1h}
+  incident:
+    description: Immune response lifecycle; the same lifecycle is used for quarantine of cells, data, artifacts and identities.
+    initial: OBSERVED
+    terminal: [CLOSED]
+    states: [OBSERVED, DETECTED, IDENTIFIED, CONTAINED, QUARANTINED, NEUTRALIZED, RECOVERED, LEARNED, DEFENSES_UPDATED, CLOSED]
+    transitions:
+      - {from: OBSERVED, to: DETECTED, guard: innate rule or anomaly threshold fired, authority: immune system, timeout: 1m}
+      - {from: OBSERVED, to: CLOSED, guard: observation dismissed with recorded reason, authority: immune system, timeout: 1h}
+      - {from: DETECTED, to: IDENTIFIED, guard: evidence normalized and classified, authority: immune system, timeout: 15m}
+      - {from: DETECTED, to: CLOSED, guard: false positive recorded against false-positive budget, authority: immune system, timeout: 1h}
+      - {from: IDENTIFIED, to: CONTAINED, guard: bounded containment applied with TTL, authority: immune system, timeout: 5m}
+      - {from: IDENTIFIED, to: CLOSED, guard: benign or tolerated with ToleranceGrant, authority: immune system plus owner, timeout: 1h}
+      - {from: CONTAINED, to: QUARANTINED, guard: subject isolated and evidence preserved, authority: immune system, timeout: 15m}
+      - {from: QUARANTINED, to: NEUTRALIZED, guard: threat removed or subject terminated or credentials revoked, authority: immune system, timeout: 24h}
+      - {from: QUARANTINED, to: CLOSED, guard: released after review as false positive, authority: owner review, timeout: 24h}
+      - {from: NEUTRALIZED, to: RECOVERED, guard: recovery verified from trusted source, authority: repair controller, timeout: 24h}
+      - {from: RECOVERED, to: LEARNED, guard: post-incident review recorded, authority: owner, timeout: 7d}
+      - {from: LEARNED, to: DEFENSES_UPDATED, guard: new rule validated for precision and blast radius, authority: change protocol, timeout: 7d}
+      - {from: LEARNED, to: CLOSED, guard: no defense change warranted, authority: owner, timeout: 7d}
+      - {from: DEFENSES_UPDATED, to: CLOSED, guard: rollout verified, authority: owner, timeout: 7d}
+  change:
+    description: Governed change protocol shared by learning (adaptive parameters) and evolution (genome changes); `class` selects required guards.
+    initial: OBSERVED
+    terminal: [PROMOTED, ROLLED_BACK, REJECTED]
+    states: [OBSERVED, PROPOSED, SIMULATED, EVALUATED, APPROVED, CANARY, PROMOTED, ROLLED_BACK, REJECTED]
+    transitions:
+      - {from: OBSERVED, to: PROPOSED, guard: proposal within declared adaptive bounds or genome change request, authority: proposer, timeout: 7d}
+      - {from: PROPOSED, to: SIMULATED, guard: offline simulation in sandbox, authority: evaluator, timeout: 7d}
+      - {from: PROPOSED, to: EVALUATED, guard: learning class only - offline evaluation on governed evaluation set, authority: evaluator, timeout: 7d}
+      - {from: PROPOSED, to: REJECTED, guard: outside bounds or provenance missing, authority: evaluator, timeout: 7d}
+      - {from: SIMULATED, to: EVALUATED, guard: multi-criteria evaluation with safety constraints dominating, authority: evaluator, timeout: 7d}
+      - {from: SIMULATED, to: REJECTED, guard: simulation violated invariant, authority: evaluator, timeout: 7d}
+      - {from: EVALUATED, to: APPROVED, guard: approver distinct from proposer and evaluator, authority: approver, timeout: 7d}
+      - {from: EVALUATED, to: REJECTED, guard: evaluation below threshold or safety constraint violated, authority: approver, timeout: 7d}
+      - {from: APPROVED, to: CANARY, guard: rollback artifact and lineage record exist, authority: release controller, timeout: 1d}
+      - {from: CANARY, to: PROMOTED, guard: canary metrics within bounds for observation window, authority: release controller, timeout: 7d}
+      - {from: CANARY, to: ROLLED_BACK, guard: canary breach or drift or human override, authority: release controller or any guardian, timeout: 1h}
+  embodied_safety:
+    description: Physical safety states of the Embodied Profile; independent of any LLM and of the network control plane.
+    initial: INIT
+    terminal: []
+    states: [INIT, CALIBRATING, READY, ACTIVE, LIMITED, SAFE_STOP, LOCKED_OUT, INSPECTED, RESET_AUTHORIZED]
+    transitions:
+      - {from: INIT, to: CALIBRATING, guard: hardware self-test passed, authority: safety controller, timeout: 1m}
+      - {from: CALIBRATING, to: READY, guard: calibration versions valid and sensors fresh, authority: safety controller, timeout: 10m}
+      - {from: READY, to: ACTIVE, guard: task authorized and safety envelope loaded, authority: safety controller, timeout: 1m}
+      - {from: ACTIVE, to: LIMITED, guard: uncertainty or degraded sensor or proximity, authority: safety controller, timeout: 100ms}
+      - {from: LIMITED, to: ACTIVE, guard: condition cleared for debounce window, authority: safety controller, timeout: 1m}
+      - {from: ACTIVE, to: SAFE_STOP, guard: hard limit or watchdog or emergency stop, authority: independent interlock, timeout: 50ms}
+      - {from: LIMITED, to: SAFE_STOP, guard: hard limit or watchdog or emergency stop, authority: independent interlock, timeout: 50ms}
+      - {from: SAFE_STOP, to: LOCKED_OUT, guard: hazard latched, authority: independent interlock, timeout: 1s}
+      - {from: LOCKED_OUT, to: INSPECTED, guard: physical inspection recorded, authority: qualified human, timeout: 7d}
+      - {from: INSPECTED, to: RESET_AUTHORIZED, guard: reset authority confirmed, authority: qualified human, timeout: 1d}
+      - {from: RESET_AUTHORIZED, to: CALIBRATING, guard: reset executed, authority: safety controller, timeout: 1m}

@@ -3,14 +3,23 @@
 ```mermaid
 stateDiagram-v2
   [*] --> OBSERVED
-  OBSERVED --> SUSPECT: innate detection
-  SUSPECT --> CONTAINED: bounded response
-  CONTAINED --> EVIDENCE_PRESERVED
-  EVIDENCE_PRESERVED --> ANALYZED
-  ANALYZED --> RELEASED: benign / tolerated
-  ANALYZED --> REMEDIATED: repairable
-  ANALYZED --> TERMINATED: unsafe
-  REMEDIATED --> RELEASED: validation passed
-  RELEASED --> [*]
-  TERMINATED --> [*]
+  OBSERVED --> DETECTED
+  OBSERVED --> CLOSED
+  DETECTED --> IDENTIFIED
+  DETECTED --> CLOSED
+  IDENTIFIED --> CONTAINED
+  IDENTIFIED --> CLOSED
+  CONTAINED --> QUARANTINED
+  QUARANTINED --> NEUTRALIZED
+  QUARANTINED --> CLOSED
+  NEUTRALIZED --> RECOVERED
+  RECOVERED --> LEARNED
+  LEARNED --> DEFENSES_UPDATED
+  LEARNED --> CLOSED
+  DEFENSES_UPDATED --> CLOSED
+  CLOSED --> [*]
 ```
+
+detect → identify → contain → quarantine → neutralize → recover → learn → update defenses.
+
+Источник истины: `specifications/state-machines.yaml` (машина `incident`); валидатор проверяет совпадение рёбер.

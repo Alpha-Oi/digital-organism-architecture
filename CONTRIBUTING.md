@@ -11,26 +11,29 @@ Digital Organism Architecture — нормативный метаархитек�
 
 ## Требования к Biology-to-IT mapping
 
-Новый механизм принимается только если определены:
+Новый механизм принимается только если он фундаментально оправдан, архитектурно полезен и определены все колонки матрицы `docs/BIOLOGY_TO_IT_MAPPING.md`:
 
 1. biological mechanism;
-2. system responsibility;
+2. digital responsibility;
 3. digital component;
-4. formal contract;
-5. state machine или protocol;
-6. observability invariant;
-7. failure modes;
-8. security implications;
-9. возможный implementation stack без vendor lock-in.
+4. contract;
+5. protocol / state machine;
+6. invariant;
+7. failure mode;
+8. security / safety control;
+9. observability;
+10. evidence;
+11. нормативный статус (`Profile`): механизм без архитектурной необходимости получает `Pattern`, а не `Core`;
+12. возможный implementation stack (Приложение A) без vendor lock-in.
 
-Метафора без этих полей не является изменением стандарта.
+Нормативная строка MUST быть связана с требованием в `specifications/requirements.yaml`, а новое состояние или переход — отражено в `specifications/state-machines.yaml`, схемах, диаграммах и `docs/LIFECYCLE.md`. Метафора без этих полей не является изменением стандарта.
 
 ## Рабочий процесс
 
 1. Откройте issue с пользовательским сценарием, наблюдаемым результатом и gap в текущем стандарте.
 2. Для normative change опишите compatibility и migration impact.
 3. Измените минимальный связный набор документов и schemas.
-4. Обновите `CHANGELOG.md` и при новой находке — `CHANGES_AND_NEW_FINDINGS.md`.
+4. Обновите `CHANGELOG.md` и при новой находке — `CHANGES_AND_NEW_FINDINGS.md`; для новой или изменённой схемы добавьте valid и invalid примеры в `reference/examples/`.
 5. Запустите проверку:
 
    ```bash

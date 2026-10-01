@@ -22,6 +22,13 @@
 - OpenTelemetry, *Signals*: https://opentelemetry.io/docs/concepts/signals/
 - OpenTelemetry, *Semantic Conventions*: https://opentelemetry.io/docs/specs/semconv/
 
+## Conformance and normative language
+
+- RFC 2119, *Key words for use in RFCs to Indicate Requirement Levels*: https://www.rfc-editor.org/rfc/rfc2119
+- RFC 8174, *Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words*: https://www.rfc-editor.org/rfc/rfc8174
+- Semantic Versioning 2.0.0: https://semver.org/spec/v2.0.0.html
+- JSON Schema Draft 2020-12: https://json-schema.org/draft/2020-12
+
 ## Interpretation constraints
 
 - Ссылки не делают конкретный product stack обязательным.

@@ -1,0 +1,31 @@
+standard: DOA-FS-1.0
+implementation: reference-assistant (illustrative)
+owner: ai-platform
+version: 1.0.0
+assessment_date: '2026-10-01'
+status: VERIFIED
+assurance: self-assessed
+profiles:
+- Core
+scope:
+  boundary: reference-assistant-prod organism boundary
+  environments:
+  - staging
+  exclusions:
+  - robotics
+requirements:
+- id: REQ-CORE-01
+  status: PASS
+  component: identity authority
+  evidence_ref: evidence://identity-inventory-2026-10-01
+- id: REQ-CORE-02
+  status: PARTIAL
+  gap_owner: ai-platform
+- id: REQ-CORE-03
+  status: EXCLUDED
+  justification: illustrative claim; not assessed in this example
+assessor: ai-platform
+blocking_gaps:
+- REQ-CORE-02 egress inventory incomplete
+accepted_risks: []
+reassessment: '2026-12-01'

@@ -1,0 +1,8 @@
+entity_type: cell
+entity_id: reasoning-cell-17
+from: ACTIVE
+to: SUSPECT
+guard_evidence: semantic-check-failed:run-881
+authority: immune system
+occurred_at: '2026-10-01T12:00:00Z'
+epoch: 3

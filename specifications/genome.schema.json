@@ -4,45 +4,624 @@
   "title": "DOA Genome",
   "type": "object",
   "additionalProperties": false,
-  "required": ["apiVersion", "kind", "metadata", "spec", "integrity"],
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec",
+    "integrity"
+  ],
   "properties": {
-    "apiVersion": {"const": "doa.standard/v1"},
-    "kind": {"const": "Genome"},
+    "apiVersion": {
+      "const": "doa.standard/v1"
+    },
+    "kind": {
+      "const": "Genome"
+    },
     "metadata": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "version"],
+      "required": [
+        "name",
+        "version"
+      ],
       "properties": {
-        "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"},
-        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$"},
-        "description": {"type": "string"}
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$"
+        },
+        "description": {
+          "type": "string"
+        }
       }
     },
     "spec": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["identity", "profiles", "capabilities", "organs", "invariants", "homeostasis", "security", "adaptation"],
+      "required": [
+        "identity",
+        "profiles",
+        "capabilities",
+        "boundary",
+        "organs",
+        "invariants",
+        "resources",
+        "homeostasis",
+        "security",
+        "memory",
+        "adaptation",
+        "growth_control",
+        "ecology",
+        "aging",
+        "recovery",
+        "termination"
+      ],
       "properties": {
-        "identity": {"type": "object", "required": ["organism_id", "trust_domain"]},
-        "profiles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["Core", "Distributed", "Adaptive", "Embodied"]}},
-        "capabilities": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-        "organs": {"type": "array", "minItems": 1, "items": {"$ref": "organ.schema.json"}},
-        "tissues": {"type": "array", "items": {"type": "object"}},
-        "invariants": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-        "topology": {"type": "object"},
-        "resources": {"type": "object"},
-        "homeostasis": {"type": "array", "minItems": 1, "items": {"type": "object"}},
-        "security": {"type": "object", "required": ["default_decision", "identity", "quarantine"]},
-        "memory": {"type": "object"},
-        "adaptation": {"type": "object", "required": ["runtime_self_modification", "promotion_protocol"]},
-        "termination": {"type": "object"}
-      }
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organism_id",
+            "trust_domain",
+            "trust_root_ref"
+          ],
+          "properties": {
+            "organism_id": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"
+            },
+            "trust_domain": {
+              "type": "string",
+              "minLength": 1
+            },
+            "trust_root_ref": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "profiles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "Core",
+              "Distributed",
+              "Adaptive",
+              "Embodied"
+            ]
+          },
+          "contains": {
+            "const": "Core"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "boundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ingress",
+            "egress",
+            "external_dependencies"
+          ],
+          "properties": {
+            "ingress": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "egress": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "external_dependencies": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "class",
+                  "trust",
+                  "contract",
+                  "failure_policy"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"
+                  },
+                  "class": {
+                    "enum": [
+                      "environment-actor",
+                      "external-service",
+                      "foundation-model",
+                      "symbiont",
+                      "peer-organism",
+                      "infrastructure"
+                    ]
+                  },
+                  "trust": {
+                    "enum": [
+                      "SYMBIONT",
+                      "PARTNER",
+                      "UNKNOWN"
+                    ]
+                  },
+                  "contract": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "failure_policy": {
+                    "enum": [
+                      "fail-closed",
+                      "fail-open-bounded",
+                      "degrade",
+                      "failover",
+                      "isolate"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "organs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "organ.schema.json"
+          }
+        },
+        "tissues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "organ",
+              "cell_profile",
+              "replicas"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"
+              },
+              "organ": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"
+              },
+              "cell_profile": {
+                "type": "string"
+              },
+              "replicas": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "min",
+                  "max"
+                ],
+                "properties": {
+                  "min": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "max": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "invariants": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "topology": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "failure_domains",
+            "spread_critical_organs"
+          ],
+          "properties": {
+            "failure_domains": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "spread_critical_organs": {
+              "type": "boolean"
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "currency",
+            "organism_cost_limit_per_day"
+          ],
+          "properties": {
+            "currency": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "organism_cost_limit_per_day": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "homeostasis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "control-loop.schema.json"
+          }
+        },
+        "security": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "default_decision",
+            "identity",
+            "quarantine"
+          ],
+          "properties": {
+            "default_decision": {
+              "const": "deny"
+            },
+            "identity": {
+              "type": "string"
+            },
+            "quarantine": {
+              "type": "string"
+            }
+          }
+        },
+        "memory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "working_ttl",
+            "semantic_write_policy",
+            "episodic_retention",
+            "forgetting"
+          ],
+          "properties": {
+            "working_ttl": {
+              "type": "string",
+              "pattern": "^[0-9]+(ms|s|m|h|d)$"
+            },
+            "semantic_write_policy": {
+              "type": "string"
+            },
+            "episodic_retention": {
+              "type": "string",
+              "pattern": "^[0-9]+(ms|s|m|h|d)$"
+            },
+            "forgetting": {
+              "type": "string"
+            }
+          }
+        },
+        "adaptation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runtime_self_modification",
+            "promotion_protocol"
+          ],
+          "properties": {
+            "runtime_self_modification": {
+              "const": false
+            },
+            "promotion_protocol": {
+              "type": "string"
+            },
+            "learning_bounds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "separation_of_duties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "proposer",
+                "evaluator",
+                "approver"
+              ],
+              "properties": {
+                "proposer": {
+                  "type": "string"
+                },
+                "evaluator": {
+                  "type": "string"
+                },
+                "approver": {
+                  "type": "string"
+                }
+              }
+            },
+            "evaluation_set_ref": {
+              "type": "string"
+            },
+            "rollback_ref": {
+              "type": "string"
+            }
+          }
+        },
+        "growth_control": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_cells",
+            "max_spawn_depth",
+            "max_delegation_depth",
+            "spawn_rate_limit_per_minute",
+            "orphan_lease_ttl",
+            "grant_issuer_separate_from_enforcer"
+          ],
+          "properties": {
+            "max_cells": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_spawn_depth": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max_delegation_depth": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "spawn_rate_limit_per_minute": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "orphan_lease_ttl": {
+              "type": "string",
+              "pattern": "^[0-9]+(ms|s|m|h|d)$"
+            },
+            "grant_issuer_separate_from_enforcer": {
+              "const": true
+            }
+          }
+        },
+        "ecology": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reproduction",
+            "federation",
+            "horizontal_transfer"
+          ],
+          "properties": {
+            "reproduction": {
+              "enum": [
+                "forbidden",
+                "plan-gated"
+              ]
+            },
+            "federation": {
+              "enum": [
+                "none",
+                "treaty-gated"
+              ]
+            },
+            "horizontal_transfer": {
+              "enum": [
+                "forbidden",
+                "quarantine-gated"
+              ]
+            }
+          }
+        },
+        "aging": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "index_inputs",
+            "senescence_threshold",
+            "retirement_authority"
+          ],
+          "properties": {
+            "index_inputs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "senescence_threshold": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "retirement_authority": {
+              "type": "string"
+            }
+          }
+        },
+        "recovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "seed_ref",
+            "seed_outside_failure_domain",
+            "catastrophic_recovery_authority"
+          ],
+          "properties": {
+            "seed_ref": {
+              "type": "string"
+            },
+            "seed_outside_failure_domain": {
+              "const": true
+            },
+            "catastrophic_recovery_authority": {
+              "type": "string"
+            }
+          }
+        },
+        "termination": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "revoke_capabilities",
+            "forensic_policy",
+            "tombstone"
+          ],
+          "properties": {
+            "revoke_capabilities": {
+              "const": true
+            },
+            "forensic_policy": {
+              "enum": [
+                "none",
+                "metadata-only",
+                "policy-permitted-snapshot"
+              ]
+            },
+            "tombstone": {
+              "const": true
+            }
+          }
+        },
+        "embodiment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "hazard_analysis_ref",
+            "safe_state",
+            "independent_interlock",
+            "watchdog",
+            "real_time_budget"
+          ],
+          "properties": {
+            "hazard_analysis_ref": {
+              "type": "string"
+            },
+            "safe_state": {
+              "type": "string"
+            },
+            "independent_interlock": {
+              "type": "string"
+            },
+            "watchdog": {
+              "type": "string"
+            },
+            "real_time_budget": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "profiles": {
+                "contains": {
+                  "const": "Distributed"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "topology"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "profiles": {
+                "contains": {
+                  "const": "Embodied"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "embodiment"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "profiles": {
+                "contains": {
+                  "const": "Adaptive"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adaptation": {
+                "required": [
+                  "learning_bounds",
+                  "separation_of_duties",
+                  "evaluation_set_ref",
+                  "rollback_ref"
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "integrity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["digest", "signature_ref"],
-      "properties": {"digest": {"type": "string"}, "signature_ref": {"type": "string"}, "provenance_ref": {"type": "string"}}
+      "required": [
+        "digest",
+        "signature_ref"
+      ],
+      "properties": {
+        "digest": {
+          "type": "string",
+          "pattern": "^sha(256|384|512):[A-Fa-f0-9]+$"
+        },
+        "signature_ref": {
+          "type": "string"
+        },
+        "provenance_ref": {
+          "type": "string"
+        }
+      }
     }
   }
 }

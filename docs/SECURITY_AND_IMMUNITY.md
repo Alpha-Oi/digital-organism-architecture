@@ -28,16 +28,44 @@ Detection rules, reputations и playbooks, выведенные из подтв�
 
 Exceptions для self/partner identities имеют scope, reason, owner, expiry и revocation. Transitive trust запрещён по умолчанию.
 
-## 3. Quarantine protocol
+## 3. Полный жизненный цикл иммунного ответа
+
+Каждый security incident проходит машину `incident` (`specifications/state-machines.yaml`, `diagrams/immune-response.md`):
 
 ```text
-OBSERVED -> SUSPECT -> CONTAINED -> EVIDENCE_PRESERVED
-         -> ANALYZED -> RELEASED | REMEDIATED | TERMINATED
+OBSERVED -> DETECTED -> IDENTIFIED -> CONTAINED -> QUARANTINED
+         -> NEUTRALIZED -> RECOVERED -> LEARNED -> DEFENSES_UPDATED -> CLOSED
 ```
 
-Quarantine MUST прекращать новые high-risk actions, ограничивать network/data access, сохранять permitted evidence и поддерживать appeal/review для false positive.
+| Этап | Что происходит | Основные механизмы и контролы | Evidence |
+|---|---|---|---|
+| detect | срабатывание innate rule, anomaly threshold, attestation failure | I-04, I-05, N-03; audit logs authn/authz | DetectionEvent, FindingEvidence |
+| identify | классификация: что, кто, масштаб, trust class | I-03 (self/non-self), provenance E-01, indicators I-07 | классифицированный FindingEvidence |
+| contain | ограниченное, истекающее ограничение (TTL, scope): rate limit, seal, deny | I-12 coagulation, capability restrictions, trust boundaries | SealRule с TTL |
+| quarantine | изоляция субъекта без его кооперации, сохранение evidence | M-04, C-17 sandbox, revoke grants (least privilege), изоляция сети/данных | QuarantineCase, forensic snapshot по policy |
+| eradicate / neutralize | удаление угрозы: terminate (apoptosis), revoke credentials, purge, rollback poisoned artifacts | C-27, rollback, provenance-based purge | terminal record / purge report |
+| recover | восстановление из trusted source и проверка | REGENERATE/REPLACE/ROLLBACK (`FAILURE_AND_RECOVERY.md`), I-13, I-14 | attestation после recovery |
+| learn | post-incident review, причины, ложные срабатывания | I-07, false-positive budget I-16 | review record |
+| update defenses | новое правило/playbook через change protocol | I-06, машина `change` (class=learning) | rule validation: precision, recall, blast radius |
 
-## 4. Apoptosis protocol
+Связи с базовыми контролями безопасности:
+
+| Контроль | Роль в цикле |
+|---|---|
+| Identity / authentication | основа identify; каждое решение привязано к проверенному субъекту (I-03) |
+| Authorization / least privilege | contain и neutralize: сужение и отзыв `CapabilityGrant`; attenuation при делегировании |
+| Provenance | identify, neutralize и learn: определение затронутых объектов и точный purge (E-01) |
+| Sandboxing и isolation | quarantine и безопасный анализ (C-17, M-04) |
+| Trust boundaries | contain: разделение зон; поведение при пересечении границы (`BOUNDARY_AND_IDENTITY.md`) |
+| Capability restrictions | временные ограничения вместо полного отключения |
+| Rollback | recover: возврат artifact/policy/model к проверенной версии |
+| Audit logs | все этапы; tamper-evident, без секретов; переживают потерю data plane |
+
+Quarantine MUST прекращать новые high-risk actions, ограничивать network/data access, сохранять permitted evidence, работать без кооперации субъекта и поддерживать review ложных срабатываний. Автоматическая блокировка MUST иметь TTL и счётчик в false-positive budget; выход из quarantine по ложному срабатыванию — `QUARANTINED -> CLOSED` с review владельца.
+
+## 4. Apoptosis и necrosis
+
+Apoptosis — контролируемое завершение (8 шагов, машина `cell`, состояние `TERMINATING`):
 
 1. Stop admission of new work.
 2. Bound or cancel active work.
@@ -47,6 +75,8 @@ Quarantine MUST прекращать новые high-risk actions, ограни�
 6. Release resources and remove discovery endpoint.
 7. Emit signed terminal record.
 8. Verify absence of live grants and replicas.
+
+Necrosis — неконтролируемый отказ (`FAILED`): организм не может рассчитывать на кооперацию клетки. Контроль — lease expiry и fencing (revoke grants, fencing token/epoch, сверка side effects по idempotency key); затем `ISOLATED` и repair либо apoptosis. Различие критично: некрозу не выполнены шаги 3–8, поэтому enforcement выполняется внешним authority.
 
 ## 5. Oncological anti-patterns
 
@@ -59,10 +89,13 @@ Quarantine MUST прекращать новые high-risk actions, ограни�
 | Invasion/metastasis | execution outside assigned boundary | workload identity, network/data policy |
 | Immune evasion | missing/deceptive telemetry | independent telemetry, attestation |
 | Genome instability | unreviewed config/model mutation | signed immutable versions, repair |
+| Recursive delegation / privilege amplification | delegated grant ⊄ parent grant, глубина > `max_delegation_depth` | attenuation, depth limit, lease |
+| Self-replication | экземпляры вне inventory или lineage | `ecology.reproduction`, запрет credential cloning |
+| Orphans | клетки без lease или родителя | lease TTL, fencing, termination |
 
 ## 6. Security observability
 
-Минимум: authentication decisions, capability grants/revocations, policy version, ingress/egress decision, quarantine transition, artifact digest, data classification, admin/break-glass action и clock/freshness status. Logs MUST NOT включать secrets или unrestricted chain-of-thought.
+Минимум: authentication decisions, capability grants/revocations, policy version, ingress/egress decision, incident и quarantine transitions, artifact digest, data classification, admin/break-glass action, lifecycle transitions и clock/freshness status. Logs MUST NOT включать secrets или unrestricted chain-of-thought.
 
 ## 7. Threat classes
 
@@ -77,4 +110,4 @@ Quarantine MUST прекращать новые high-risk actions, ограни�
 - sensor spoofing and actuator hijack;
 - control-plane compromise and deceptive health.
 
-Каждая implementation MUST иметь локальный threat model и не должна считать этот список исчерпывающим.
+Каждый класс отказа и атаки сопоставлен с detection, containment, recovery и verification в [FAILURE_AND_RECOVERY.md](FAILURE_AND_RECOVERY.md). Каждая implementation MUST иметь локальный threat model и не должна считать этот список исчерпывающим.

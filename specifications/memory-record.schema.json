@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doa-standard.org/schemas/memory-record.schema.json",
+  "title": "DOA MemoryRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "memory_type",
+    "content_ref",
+    "provenance",
+    "confidence",
+    "classification",
+    "retention",
+    "consent"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "memory_type": {
+      "enum": [
+        "working",
+        "episodic",
+        "semantic",
+        "procedural"
+      ]
+    },
+    "content_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "recorded_at",
+        "integrity"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recorded_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        "trust_class": {
+          "enum": [
+            "SELF",
+            "SYMBIONT",
+            "PARTNER",
+            "UNKNOWN"
+          ]
+        },
+        "integrity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "algorithm",
+            "digest"
+          ],
+          "properties": {
+            "algorithm": {
+              "enum": [
+                "sha256",
+                "sha384",
+                "sha512"
+              ]
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[A-Fa-f0-9]+$"
+            }
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "decay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "half_life"
+      ],
+      "properties": {
+        "half_life": {
+          "type": "string",
+          "pattern": "^[0-9]+(s|m|h|d)$"
+        },
+        "floor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "validity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "valid_from": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        "valid_until": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+        }
+      }
+    },
+    "classification": {
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy",
+        "expires_at"
+      ],
+      "properties": {
+        "policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expires_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        "legal_hold": {
+          "type": "boolean"
+        }
+      }
+    },
+    "consent": {
+      "enum": [
+        "not-required",
+        "granted",
+        "withdrawn"
+      ]
+    },
+    "supersedes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "memory_type": {
+            "enum": [
+              "semantic",
+              "procedural"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "properties": {
+              "trust_class": {
+                "enum": [
+                  "SELF",
+                  "SYMBIONT",
+                  "PARTNER"
+                ]
+              }
+            },
+            "required": [
+              "trust_class"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "memory_type": {
+            "const": "procedural"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "approval_ref"
+        ],
+        "properties": {
+          "approval_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}
