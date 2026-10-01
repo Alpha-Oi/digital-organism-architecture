@@ -1,10 +1,12 @@
 # Digital Organism Architecture (DOA)
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 
 **Standard identifier:** `DOA-FS-1.0`
 
 **Status:** Foundational Standard (released)
+
+**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.1.0: необязательный статус `DESIGNED`, реестр классов отказа, уточнения `REQ-CORE-18` и `REQ-CORE-22`)
 
 **Date:** 2026-10-01
 

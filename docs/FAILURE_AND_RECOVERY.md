@@ -31,6 +31,8 @@ Regeneration ≠ restart. Восстановление MUST выбирать н�
 
 ## 2. Реестр классов отказа
 
+Машиночитаемая форма реестра — `specifications/failure-classes.yaml`; таблица ниже и этот файл MUST совпадать (проверяет `scripts/validate_repository.py`). Claim может ссылаться на класс по id (`F-01`…) в необязательном поле `failure_classes`.
+
 Каждая реализация MUST отметить применимые классы и показать для них detection, containment, recovery и verification (`REQ-CORE-23`). Столбец Recovery использует режимы из раздела 1.
 
 | ID | Класс | Detection | Containment | Recovery | Verification | Механизмы |

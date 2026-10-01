@@ -41,12 +41,12 @@
 | REQ-CORE-15 | Core | **Bounded termination (apoptosis).** Cell and organism termination MUST follow the bounded protocol, leave no live grants, endpoints or replicas, and emit a terminal record. | C-27, E-05 | Apoptosis test and terminal record (`lifecycle-transition.terminal_record`). | test |
 | REQ-CORE-16 | Core | **Uncontrolled failure containment (necrosis).** Lost or crashed cells MUST be fenced by lease expiry, their grants revoked, and duplicate side effects prevented by idempotency. | C-28, C-29 | Crash-injection test showing fencing latency and revoked grants. | test |
 | REQ-CORE-17 | Core | **Growth control.** Cell count, spawn depth, spawn rate and delegation depth MUST be bounded by genome `growth_control`; grant issuer and enforcer MUST be separate; orphans MUST be detected by lease. | C-25, I-17, N-11 | Runaway-spawn test, admission rejection log, orphan-lease report. | test |
-| REQ-CORE-18 | Core | **Resource accounting.** All work MUST be reserved and charged against a budget; resource scarcity MUST gate growth. | C-16, M-12, M-14, M-09 | Accounting reconciliation report and scarcity-gating test. | test |
+| REQ-CORE-18 | Core | **Resource accounting.** Work performed or authorized by the organism MUST be reserved and charged against a budget (reserved accounting); consumption known only from external telemetry (observed accounting) MUST be recorded with its source and uncertainty and MUST NOT be reported as reserved; resource scarcity MUST gate growth. | C-16, M-12, M-14, M-09 | Accounting reconciliation report that separates reserved from observed accounting and states the uncertainty of observed figures, and scarcity-gating test. | test |
 | REQ-CORE-19 | Core | **Memory governance.** Memory MUST be typed (working, episodic, semantic, procedural), carry provenance, confidence, retention and consent, and support decay, supersession and verified erasure. | N-12, N-13, N-14, N-15, N-16, N-17, C-18 | MemoryRecord samples, consolidation log, erasure test. | schema |
 | REQ-CORE-20 | Core | **Recovery taxonomy.** Each organ MUST declare permitted recovery modes (RESTART, RESTORE, REPAIR, REPLACE, REGENERATE, REBUILD, RECONFIGURE, ROLLBACK); recovery MUST NOT clone corrupted observed state or credentials. | C-05, T-05, I-13, I-14 | Organ `recovery.modes`, restore drill, repair-source independence evidence. | schema |
 | REQ-CORE-21 | Core | **Aging and senescence.** The organism MUST compute an AgingIndex, move aged components to a restricted senescent state and replace or retire them. | C-30, I-18 | Genome `aging`, aging report, senescence-to-replacement record. | schema |
-| REQ-CORE-22 | Core | **Identity continuity and anti-resurrection.** Identity MUST persist across component replacement via signed continuity records, and terminated or revoked entities MUST NOT be restorable from stale state. | E-03, E-04, E-02 | Component-replacement test and restore-after-tombstone rejection test. | test |
-| REQ-CORE-23 | Core | **Failure-class coverage.** Each applicable class in docs/FAILURE_AND_RECOVERY.md MUST have documented detection, containment, recovery and verification, or a justified exclusion. | C-24, H-05, I-12 | Failure-class coverage table for the implementation with test references. | inspection |
+| REQ-CORE-22 | Core | **Identity continuity and anti-resurrection.** Identity MUST persist across component replacement via signed continuity records, and terminated or revoked entities MUST NOT be restorable from stale state. Continuity records and tombstones apply to identities the organism issues; identities issued by others MUST be declared as external dependencies, and the organism SHOULD record their mapping to its own identity and verify their external status on restore. | E-03, E-04, E-02 | Component-replacement test and restore-after-tombstone rejection test. | test |
+| REQ-CORE-23 | Core | **Failure-class coverage.** Each applicable class in docs/FAILURE_AND_RECOVERY.md MUST have documented detection, containment, recovery and verification, or a justified exclusion. | C-24, H-05, I-12 | Failure-class coverage table for the implementation with test references; a claim MAY reference classes by id in `failure_classes`. | inspection |
 | REQ-CORE-24 | Core | **Audit and secret hygiene.** Audit records MUST be tamper-evident, survive loss of the ordinary data plane where feasible, and MUST NOT contain secrets or unrestricted reasoning traces. | I-05, M-08 | Audit-store design, secret-scan result over audit samples. | test |
 | REQ-CORE-25 | Core | **Microbiome (guest) governance.** Third-party plugins, tools and agents MUST be admitted as bounded symbionts with identity, quota and revocation, and MUST NOT acquire organ privileges. | E-12, I-03 | Symbiont inventory, quota configuration, revocation test. | test |
 | REQ-CORE-26 | Core | **Separation of cognition and authority.** Cognitive output (including any LLM) MUST be a proposal; routing and salience MUST NOT raise the authority of a source; no single model may be sole proposer, policy authority, executor and verifier of a high-impact action. | N-04, N-05, N-06, N-07 | Decision-flow diagram, test that a plan without a grant is not executed, test that high salience does not bypass policy. | test |
@@ -81,8 +81,23 @@
 | Статус | Условия |
 |---|---|
 | `UNVERIFIED` | claim заявлен без evidence либо evidence не прошёл проверку |
-| `PARTIAL` | часть требований заявленных профилей имеет статус `PASS` с evidence; остальные `PARTIAL`/`FAIL`/`NOT_ASSESSED`/`EXCLUDED`; blocking gaps перечислены |
+| `PARTIAL` | часть требований заявленных профилей имеет статус `PASS` с evidence; остальные `PARTIAL`/`FAIL`/`NOT_ASSESSED`/`DESIGNED`/`EXCLUDED`; blocking gaps перечислены |
 | `VERIFIED` | **все** требования Core, заявленных профилей и Conditional имеют статус `PASS` с `evidence_ref` либо `EXCLUDED` с письменным `justification`; нет blocking gaps; указаны assessor, дата и срок переоценки |
+
+Статус отдельного требования (поле `status` в `requirements`):
+
+| Статус | Когда ставится | Что требуется |
+|---|---|---|
+| `PASS` | механизм реализован и подтверждён воспроизводимым evidence | `evidence_ref` |
+| `PARTIAL` | реализована и подтверждена часть механизма | — |
+| `FAIL` | механизм отсутствует или не работает | — |
+| `EXCLUDED` | требование не применимо | письменный `justification` |
+| `NOT_ASSESSED` | требование не рассматривалось | — |
+| `DESIGNED` | механизм объявлен проектом или инструкциями, но не реализован кодом либо не имеет воспроизводимого evidence | `component` (где он описан) и `gap_owner` |
+
+`DESIGNED` отличает «описано, но не построено» от `PARTIAL` (часть построена и подтверждена), `FAIL` (механизма нет) и `NOT_ASSESSED` (не смотрели). Он никогда не считается `PASS` и не засчитывается в условие «хотя бы одно `PASS`» для claim `PARTIAL`. Claim с требованием в статусе `DESIGNED` не может быть `VERIFIED`. Ссылка на описание дизайна может быть указана в `evidence_ref`, но по правилу 2 evidence не является.
+
+Классы отказа из [FAILURE_AND_RECOVERY.md](FAILURE_AND_RECOVERY.md) (реестр: `specifications/failure-classes.yaml`) можно оценивать по отдельности в необязательном поле `failure_classes` с теми же статусами. Если поле указано, оно проверяется на согласованность с реестром, а при `REQ-CORE-23` в статусе `PASS` каждый класс MUST иметь статус `PASS` или `EXCLUDED` с `justification`.
 
 Дополнительные правила:
 
@@ -100,7 +115,7 @@
 python scripts/check_conformance_claim.py path/to/claim.yaml
 ```
 
-Скрипт валидирует claim по схеме и проверяет покрытие реестра требований и правила статуса (раздел 3). Он не проверяет сами evidence-артефакты: это задача assessor.
+Скрипт валидирует claim по схеме и проверяет покрытие реестра требований и правила статуса (раздел 3). Он также печатает предупреждения (`warning:`) для `evidence_ref`, который заведомо не удовлетворяет правилу 2: ссылка на подвижную ветку (`main`, `master`, `develop`, `development`, `HEAD`, `latest`) или запись без пути и идентификатора. Предупреждения не меняют код выхода. Он не проверяет сами evidence-артефакты: это задача assessor.
 
 ## 4. Минимальный evidence pack
 
@@ -120,3 +135,5 @@ Evidence pack — набор артефактов, на которые ссыл�
 ## 5. Совместимость
 
 Claim к `DOA-FS-1.0` остаётся действительным для patch- и minor-релизов 1.x, пока реестр требований профилей не расширен. Если minor-релиз добавляет требование, claim остаётся `VERIFIED` относительно ранее оцененных требований и MUST указывать новые требования как `NOT_ASSESSED` до переоценки. Major-релиз требует нового claim.
+
+Релиз 1.1.0 не добавляет требований: он добавляет необязательный статус `DESIGNED`, необязательное поле `failure_classes`, реестр `specifications/failure-classes.yaml` и уточняет формулировки `REQ-CORE-18` (различие reserved и observed accounting) и `REQ-CORE-22` (область применения tombstone). Идентификатор стандарта остаётся `DOA-FS-1.0`; claim, составленные по 1.0.x, остаются действительными без изменений. Claim, использующий `DESIGNED` или `failure_classes`, не проходит схему 1.0.x.

@@ -2,6 +2,35 @@
 
 Все существенные изменения стандарта документируются здесь. Формат версий — SemVer; политика совместимости — `GOVERNANCE.md`.
 
+## [1.1.0] - 2026-10-01
+
+Minor-релиз: additive изменения контракта conformance и два нормативных уточнения. Новых требований, механизмов, схем (кроме расширения схемы claim) и state machines нет. Идентификатор стандарта остаётся `DOA-FS-1.0`.
+
+### Added
+
+- Необязательный статус требования `DESIGNED` в `conformance-claim.schema.json`: механизм объявлен проектом или инструкциями, но не реализован кодом либо не имеет воспроизводимого evidence. Требует `component` и `gap_owner`, не считается `PASS`, не допускается в claim `VERIFIED`. Определения статусов требования добавлены в `docs/CONFORMANCE.md`, раздел 3 (issue #5, п. 1).
+- `specifications/failure-classes.yaml`: машиночитаемый реестр классов отказа `F-01`…`F-25`, идентичный таблице `docs/FAILURE_AND_RECOVERY.md`, раздел 2; валидатор сверяет id, названия и все колонки (issue #5, п. 5).
+- Необязательное поле `failure_classes` в claim: статус по каждому классу. `scripts/check_conformance_claim.py` проверяет id по реестру и дубликаты; при `REQ-CORE-23` в статусе `PASS` (и в `VERIFIED` claim) все классы MUST быть `PASS` или `EXCLUDED`.
+- Предупреждения `check_conformance_claim.py` (`warning:`, код выхода не меняется) для `evidence_ref`, ссылающегося на подвижную ветку (`main`, `master`, `develop`, `development`, `HEAD`, `latest`) или не содержащего пути и идентификатора.
+- Примеры: valid `conformance-claim--designed-and-failure-classes.yaml`; invalid `conformance-claim--designed-without-owner.yaml` и `conformance-claim--failure-class-bad-id.yaml`; раздел `failure_classes` в шаблоне claim.
+- Проверки в `scripts/validate_repository.py`: реестр классов отказа, определения статусов, поведение checker'а для `DESIGNED`, `failure_classes` и предупреждений.
+
+### Changed (нормативно)
+
+- `REQ-CORE-18`: различие reserved accounting (работа, которую организм выполняет или разрешает сам) и observed accounting (потребление, известное только из внешней телеметрии). Observed MUST записываться с источником и неопределённостью и MUST NOT выдаваться за reserved. Описание в `docs/METABOLISM.md`, раздел 1 (issue #5, п. 4).
+- `REQ-CORE-22`: область применения. Continuity records и tombstones обязательны для identities, которые организм выдаёт сам; identities других сторон объявляются внешними зависимостями, а сопоставление и проверка их статуса при restore — SHOULD. Описание в `docs/LIFECYCLE.md`, раздел 9 (issue #5, п. 3).
+- `REQ-CORE-23`: в тексте evidence упомянуто поле `failure_classes`.
+
+### Compatibility
+
+- Новых обязательных требований для существующих профилей нет. Реализация, соответствовавшая `REQ-CORE-18` и `REQ-CORE-22` по 1.0.x, остаётся соответствующей: ужесточений для неё нет (SHOULD вместо MUST для внешних identities, observed accounting описывает то, что раньше формулировка не покрывала).
+- Claim по 1.0.x остаются действительными. Claim, использующий `DESIGNED` или `failure_classes`, не проходит схему 1.0.x (расширены enum и свойства).
+- Идентификаторы `REQ-*`, `C-`/`T-`/… и `$id` схем не менялись.
+
+### Основание и ограничения
+
+Изменения выведены из двух применений стандарта (система на стадии проектирования и навык `autopilot-jet`); оба выполнены ассистентом, независимой проверки нет. Нормативные пункты (`REQ-CORE-18`, `REQ-CORE-22`) требуют review maintainer по `GOVERNANCE.md`, раздел 4.
+
 ## [1.0.1] - 2026-10-01
 
 Patch-релиз: clarifications без изменения semantics. Требования, схемы, state machines, идентификаторы и поведение скриптов не менялись.

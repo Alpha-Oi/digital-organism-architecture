@@ -8,14 +8,20 @@
 - дополнительные schema examples;
 - внешний peer review биологических соответствий и evidence первых claims.
 
-## 1.1 — Verification Kit
+## 1.1 — Conformance contract refinements (выпущен)
+
+- необязательный статус `DESIGNED` и поле `failure_classes` в claim, реестр `specifications/failure-classes.yaml`;
+- различие reserved и observed accounting (`REQ-CORE-18`), область tombstone (`REQ-CORE-22`);
+- предупреждения checker'а для подвижных ссылок на evidence.
+
+## 1.2 — Verification Kit
 
 - executable conformance test plan;
 - chaos/fault scenarios для cell, organ и circulation failures;
 - reference OpenTelemetry semantic conventions `doa.*`;
 - threat-model и hazard-analysis templates.
 
-## 1.2 — Implementation Profiles
+## 1.3 — Implementation Profiles
 
 - modular-monolith profile;
 - Kubernetes/event-streaming profile;

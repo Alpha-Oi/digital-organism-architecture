@@ -174,6 +174,8 @@ Terminal record (`lifecycle-transition.terminal_record`) MUST фиксирова
 - Credentials, выданные до tombstone, невалидны; повторное создание — только как `new-identity` по `LineageManifest`.
 - Катастрофическое восстановление (`REPAIRING→PROVISIONING`) увеличивает epoch и MUST иметь human authority и continuity record (E-06).
 
+Область применения (`REQ-CORE-22`): continuity records и tombstones обязательны для identities, которые организм сам выдаёт (организм, клетки, их credentials). Identities, выданные другими сторонами (сессии провайдера, сторонние агенты), относятся к внешним зависимостям (`BOUNDARY_AND_IDENTITY.md`, раздел 2): организм SHOULD фиксировать их сопоставление со своей identity и проверять их внешний статус при restore. Это не отменяет запрет на восстановление из устаревшего состояния для собственных identities.
+
 ## 10. Embodied safety
 
 | From | To | Guard | Authority | Timeout |

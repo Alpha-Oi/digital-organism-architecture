@@ -11,7 +11,7 @@
 | Документ / артефакт | Статус | Примечание |
 |---|---|---|
 | `docs/DOA_STANDARD_v1.0.md` | Normative | конституционные инварианты, сущности, профили |
-| `specifications/*.schema.json`, `state-machines.yaml`, `requirements.yaml` | Normative | точные data contracts, state machines и реестр требований |
+| `specifications/*.schema.json`, `state-machines.yaml`, `requirements.yaml`, `failure-classes.yaml` | Normative | точные data contracts, state machines и реестр требований |
 | `docs/BIOLOGY_TO_IT_MAPPING.md` | Normative (по колонке `Profile`) | `Core`/профильные строки — MUST; `Pattern` — SHOULD/MAY; `Anti-pattern` — запрещённое поведение с обязательным контролем |
 | `docs/ARCHITECTURE.md`, `BOUNDARY_AND_IDENTITY.md`, `LIFECYCLE.md`, `FAILURE_AND_RECOVERY.md`, `SECURITY_AND_IMMUNITY.md`, `HOMEOSTASIS.md`, `MEMORY_AND_NERVOUS_SYSTEM.md`, `METABOLISM.md`, `GENOME_AND_EVOLUTION.md` | Normative | детализация Core/Distributed/Adaptive; ключевые слова определяют уровень |
 | `docs/ROBOTICS_EXTENSION.md` | Normative для Embodied Profile; Optional extension для остальных | не обязателен, если Embodied не заявлен |
