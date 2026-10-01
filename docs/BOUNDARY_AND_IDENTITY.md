@@ -98,6 +98,8 @@ Identity организма **не** совпадает с identity ни одн�
 - Делегирование полномочий между агентами подчиняется attenuation: делегированный `CapabilityGrant` ⊆ родительского, глубина ≤ `growth_control.max_delegation_depth`, lease истекает (N-11).
 - При потере связи периферийные агенты работают в пределах `DelegationGrant` и MUST сверяться при reconnect (reconcile); решения вне делегированных прав недействительны.
 
+Применение этих правил к control plane над внешними агентами разобрано в [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md), раздел 1 (informative).
+
 ## 8. Нормативные требования
 
 Реализация MUST: (a) объявить boundary в genome (`boundary`); (b) иметь инвентарь ingress/egress; (c) классифицировать каждую внешнюю зависимость; (d) подтвердить identity continuity тестом замены компонента; (e) отклонять restore после tombstone. Evidence — `REQ-CORE-01`, `REQ-CORE-02`, `REQ-CORE-22`, `REQ-CORE-25` (см. `CONFORMANCE.md`).
