@@ -132,8 +132,12 @@ Evidence pack — набор артефактов, на которые ссыл�
 - learning/change provenance и lineage (Adaptive);
 - hazard analysis, E-stop/watchdog evidence (Embodied).
 
+Тестовые кейсы, сценарии отказа, формат отчёта и шаблоны threat model и hazard analysis для получения этого evidence собраны в [VERIFICATION_KIT.md](VERIFICATION_KIT.md) (informative; использование необязательно).
+
 ## 5. Совместимость
 
 Claim к `DOA-FS-1.0` остаётся действительным для patch- и minor-релизов 1.x, пока реестр требований профилей не расширен. Если minor-релиз добавляет требование, claim остаётся `VERIFIED` относительно ранее оцененных требований и MUST указывать новые требования как `NOT_ASSESSED` до переоценки. Major-релиз требует нового claim.
 
 Релиз 1.1.0 не добавляет требований: он добавляет необязательный статус `DESIGNED`, необязательное поле `failure_classes`, реестр `specifications/failure-classes.yaml` и уточняет формулировки `REQ-CORE-18` (различие reserved и observed accounting) и `REQ-CORE-22` (область применения tombstone). Идентификатор стандарта остаётся `DOA-FS-1.0`; claim, составленные по 1.0.x, остаются действительными без изменений. Claim, использующий `DESIGNED` или `failure_classes`, не проходит схему 1.0.x.
+
+Релиз 1.2.0 не меняет реестр требований и правила claim: он добавляет informative Verification Kit ([VERIFICATION_KIT.md](VERIFICATION_KIT.md)). Claim по 1.0.x и 1.1.x остаются действительными без переоценки.

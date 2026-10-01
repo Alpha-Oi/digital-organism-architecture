@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_NAMES = {
     "capability-grant", "cell", "conformance-claim", "control-loop", "event", "genome", "health-evidence",
     "hormone", "lifecycle-transition", "lineage-manifest", "memory-record", "organ", "organism", "policy-overlay",
+    "verification-report",
 }
 
 REQUIRED_FILES = {
@@ -36,14 +37,17 @@ REQUIRED_FILES = {
     "ROADMAP.md", "SECURITY.md", "VERSION",
     "docs/ARCHITECTURE.md", "docs/BIOLOGY_TO_IT_MAPPING.md", "docs/BOUNDARY_AND_IDENTITY.md", "docs/CONFORMANCE.md",
     "docs/DOA_STANDARD_v1.0.md", "docs/FAILURE_AND_RECOVERY.md", "docs/GENOME_AND_EVOLUTION.md", "docs/HOMEOSTASIS.md",
-    "docs/IMPLEMENTATION_GUIDE.md",
+    "docs/IMPLEMENTATION_GUIDE.md", "docs/VERIFICATION_KIT.md",
     "docs/LIFECYCLE.md", "docs/MEMORY_AND_NERVOUS_SYSTEM.md", "docs/METABOLISM.md", "docs/PRINCIPLES.md",
     "docs/RELEASE_READINESS_v1.0.md", "docs/ROBOTICS_EXTENSION.md", "docs/SECURITY_AND_IMMUNITY.md", "docs/SOURCES.md",
     "docs/TERMINOLOGY.md",
     "reference/EXAMPLE_GENOME.yaml", "reference/REFERENCE_ARCHITECTURE.md", "reference/REFERENCE_STACK.md",
-    "requirements-validation.txt", "scripts/check_conformance_claim.py", "scripts/validate_repository.py",
+    "requirements-validation.txt", "scripts/check_conformance_claim.py", "scripts/check_verification_report.py",
+    "scripts/validate_repository.py",
     "specifications/failure-classes.yaml", "specifications/requirements.yaml", "specifications/state-machines.yaml",
-    "templates/DOA_CONFORMANCE_CLAIM.md",
+    "templates/DOA_CONFORMANCE_CLAIM.md", "templates/DOA_HAZARD_ANALYSIS.md", "templates/DOA_THREAT_MODEL.md",
+    "verification/conformance-test-plan.yaml", "verification/fault-scenarios.yaml",
+    "verification/otel-semantic-conventions.yaml",
 } | {f"specifications/{name}.schema.json" for name in SCHEMA_NAMES}
 
 DIAGRAM_MACHINES = {
@@ -349,6 +353,238 @@ def validate_failure_classes(errors: list[str], mapping: dict[str, list[str]]) -
             fail(errors, f"docs/CONFORMANCE.md does not define requirement status {status}")
 
 
+CASE_ID = re.compile(r"TC-(CORE|DIST|ADPT|EMB|COND)-(\d{2})-(\d{2})")
+SCENARIO_CATEGORIES = {"cell": "CELL", "organ": "ORGAN", "circulation": "CIRC", "organism": "ORG"}
+OTEL_NAME = re.compile(r"doa(\.[a-z][a-z0-9_]*)+")
+OTEL_EVENT_NAME = re.compile(r"doa(\.(?:[a-z][a-z0-9_]*|\{entity_type\}))+\.v\d+")
+OTEL_ATTRIBUTE_TYPES = {"string", "int", "double", "boolean"}
+OTEL_INSTRUMENTS = {"counter", "updowncounter", "gauge", "histogram"}
+OTEL_REQUIREMENT_LEVELS = {"required", "recommended", "opt_in"}
+RECOVERY_MODES = {"RESTART", "RESTORE", "REPAIR", "REPLACE", "REGENERATE", "REBUILD", "RECONFIGURE", "ROLLBACK"}
+
+
+def validate_verification_kit(errors: list[str], machines: dict[str, dict]) -> None:
+    """Verification Kit registries (informative) must stay consistent with the normative registries they reference."""
+    requirements = {item["id"]: item for item in yaml.safe_load(text_of("specifications/requirements.yaml"))["requirements"]}
+    failure_ids = {item["id"] for item in yaml.safe_load(text_of("specifications/failure-classes.yaml"))["failure_classes"]}
+    plan = yaml.safe_load(text_of("verification/conformance-test-plan.yaml"))
+    catalog = yaml.safe_load(text_of("verification/fault-scenarios.yaml"))
+    semconv = yaml.safe_load(text_of("verification/otel-semantic-conventions.yaml"))
+    version = text_of("VERSION").strip()
+    short = ".".join(version.split(".")[:2])
+    for name, document, key in (("conformance-test-plan.yaml", plan, "plan_version"), ("fault-scenarios.yaml", catalog, "kit_version")):
+        if document.get("standard") != "DOA-FS-1.0":
+            fail(errors, f"verification/{name}: standard must be DOA-FS-1.0")
+        if ".".join(str(document.get(key, "")).split(".")[:2]) != short:
+            fail(errors, f"verification/{name}: {key} must have the same major.minor as VERSION ({short})")
+    if plan.get("plan_version") != catalog.get("kit_version"):
+        fail(errors, "plan_version and kit_version must be equal")
+
+    scenarios = {}
+    for item in catalog["scenarios"]:
+        scenario_id = item.get("id", "<missing>")
+        if scenario_id in scenarios:
+            fail(errors, f"duplicate scenario id {scenario_id}")
+        scenarios[scenario_id] = item
+        prefix = SCENARIO_CATEGORIES.get(item.get("category"))
+        if prefix is None or not re.fullmatch(rf"FS-{prefix}-\d{{2}}", scenario_id):
+            fail(errors, f"scenario {scenario_id}: id does not match category {item.get('category')}")
+        for key in ("title", "fault", "steady_state", "abort_conditions", "blast_radius"):
+            if not item.get(key):
+                fail(errors, f"scenario {scenario_id}: missing {key}")
+        if item.get("minimum_environment") not in {"isolated", "staging"}:
+            fail(errors, f"scenario {scenario_id}: minimum_environment must be isolated or staging")
+        expected = item.get("expected") or {}
+        for key in ("detection", "containment", "recovery", "verification"):
+            if not expected.get(key):
+                fail(errors, f"scenario {scenario_id}: expected.{key} is missing")
+        if not item.get("failure_classes"):
+            fail(errors, f"scenario {scenario_id}: failure_classes is empty")
+        for ref in item.get("failure_classes", []):
+            if ref not in failure_ids:
+                fail(errors, f"scenario {scenario_id} references unknown failure class {ref}")
+        for ref in item.get("requirements", []):
+            if ref not in requirements:
+                fail(errors, f"scenario {scenario_id} references unknown requirement {ref}")
+    for category in SCENARIO_CATEGORIES:
+        if not any(item.get("category") == category for item in scenarios.values()):
+            fail(errors, f"fault-scenarios.yaml has no scenario of category {category}")
+
+    cases = {}
+    for item in plan["cases"]:
+        case_id = item.get("id", "<missing>")
+        if case_id in cases:
+            fail(errors, f"duplicate test case id {case_id}")
+        cases[case_id] = item
+        match = CASE_ID.fullmatch(case_id)
+        requirement = requirements.get(item.get("requirement"))
+        if requirement is None:
+            fail(errors, f"test case {case_id} references unknown requirement {item.get('requirement')}")
+            continue
+        if not match or item["requirement"] != f"REQ-{match.group(1)}-{match.group(2)}":
+            fail(errors, f"test case {case_id} id does not match requirement {item['requirement']}")
+        if item.get("method") != requirement["verification"]:
+            fail(errors, f"test case {case_id}: method {item.get('method')} differs from verification {requirement['verification']} of {item['requirement']}")
+        for key in ("title", "procedure", "pass_criteria", "evidence"):
+            if not item.get(key):
+                fail(errors, f"test case {case_id}: missing {key}")
+        if "isolated_environment" in item and not isinstance(item["isolated_environment"], bool):
+            fail(errors, f"test case {case_id}: isolated_environment must be boolean")
+        for ref in item.get("scenarios", []):
+            if ref not in scenarios:
+                fail(errors, f"test case {case_id} references unknown scenario {ref}")
+            elif scenarios[ref]["minimum_environment"] == "isolated" and not item.get("isolated_environment"):
+                fail(errors, f"test case {case_id} uses isolated scenario {ref} but is not marked isolated_environment")
+    for rid in requirements:
+        if not any(item.get("requirement") == rid for item in cases.values()):
+            fail(errors, f"requirement {rid} has no test case in the plan")
+
+    coverage = catalog.get("coverage") or {}
+    if set(coverage) != failure_ids:
+        fail(errors, f"fault-scenarios.yaml coverage must list exactly the failure classes: differs by {sorted(set(coverage) ^ failure_ids)}")
+    listed: dict[str, set[str]] = {}
+    for class_id, entry in coverage.items():
+        covering = entry.get("scenarios", [])
+        test_cases = entry.get("test_cases", [])
+        if not covering and not test_cases:
+            fail(errors, f"coverage of {class_id} names neither scenarios nor test cases")
+        if test_cases and not entry.get("reason"):
+            fail(errors, f"coverage of {class_id} by test cases needs a reason")
+        for ref in covering:
+            listed.setdefault(ref, set()).add(class_id)
+            if ref not in scenarios:
+                fail(errors, f"coverage of {class_id} references unknown scenario {ref}")
+            elif class_id not in scenarios[ref].get("failure_classes", []):
+                fail(errors, f"coverage of {class_id} lists {ref}, whose failure_classes do not include it")
+        for ref in test_cases:
+            if ref not in cases:
+                fail(errors, f"coverage of {class_id} references unknown test case {ref}")
+    for scenario_id, item in scenarios.items():
+        missing = set(item.get("failure_classes", [])) - listed.get(scenario_id, set())
+        if missing:
+            fail(errors, f"scenario {scenario_id} is not listed in coverage of {sorted(missing)}")
+
+    validate_semantic_conventions(errors, semconv, machines, requirements, failure_ids, scenarios)
+    validate_report_checker(errors)
+
+
+def schema_path_values(relative: str, path: list[str]) -> list | None:
+    node = json.loads(text_of(relative))
+    for part in path:
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node if isinstance(node, list) else None
+
+
+def validate_semantic_conventions(errors, semconv, machines, requirements, failure_ids, scenarios) -> None:
+    attributes = {}
+    for item in semconv["attributes"]:
+        name = item.get("name", "<missing>")
+        if not OTEL_NAME.fullmatch(name):
+            fail(errors, f"otel attribute {name}: invalid name")
+        if name in attributes:
+            fail(errors, f"duplicate otel attribute {name}")
+        attributes[name] = item
+        if item.get("type") not in OTEL_ATTRIBUTE_TYPES:
+            fail(errors, f"otel attribute {name}: bad type {item.get('type')}")
+        for key in ("brief", "source"):
+            if not item.get(key):
+                fail(errors, f"otel attribute {name}: missing {key}")
+        if not isinstance(item.get("metric_safe"), bool):
+            fail(errors, f"otel attribute {name}: metric_safe must be boolean")
+        source_file = item.get("source", "").split("#")[0].split(",")[0].strip()
+        if source_file.startswith(("specifications/", "verification/", "docs/")) and not (ROOT / source_file).is_file():
+            fail(errors, f"otel attribute {name}: source file does not exist: {source_file}")
+        origin = item.get("values_from")
+        if origin and "values" in item:
+            fail(errors, f"otel attribute {name}: use either values or values_from")
+        if origin:
+            if origin["kind"] == "schema-enum":
+                values = schema_path_values(origin["file"], origin["path"])
+                if not values:
+                    fail(errors, f"otel attribute {name}: values_from path does not resolve to an enum")
+                elif name == "doa.lifecycle.entity_type" and set(values) != set(machines):
+                    fail(errors, f"otel attribute {name}: enum {sorted(values)} differs from state machines {sorted(machines)}")
+                elif name == "doa.recovery.mode" and set(values) != RECOVERY_MODES:
+                    fail(errors, f"otel attribute {name}: enum differs from the recovery taxonomy")
+            elif origin["kind"] not in {"failure-classes", "fault-scenarios"}:
+                fail(errors, f"otel attribute {name}: unknown values_from kind {origin['kind']}")
+        elif name not in {"doa.organism.id", "doa.organ.id", "doa.cell.id", "doa.cell.type", "doa.cell.tissue", "doa.epoch"} and "values" not in item \
+                and item.get("type") == "string" and not name.endswith((".id", ".entity_id", ".authority", ".from", ".to")):
+            fail(errors, f"otel attribute {name}: enumerated attribute lacks values or values_from")
+    if RECOVERY_MODES != set(re.findall(r"^\| `([A-Z]+)` \|", text_of("docs/FAILURE_AND_RECOVERY.md").split("## 2.")[0], re.M)):
+        fail(errors, "recovery taxonomy in FAILURE_AND_RECOVERY.md differs from the expected set of modes")
+
+    event_type = json.loads(text_of("specifications/event.schema.json"))["properties"]["type"]["pattern"]
+    for item in semconv["events"]:
+        name = item.get("name", "<missing>")
+        if not OTEL_EVENT_NAME.fullmatch(name):
+            fail(errors, f"otel event {name}: invalid name")
+        expansions = [name.replace("{entity_type}", entity) for entity in sorted(machines)] if "{entity_type}" in name else [name]
+        for expanded in expansions:
+            if not re.search(event_type, expanded):
+                fail(errors, f"otel event {expanded} does not satisfy the EventEnvelope type pattern")
+        if "{entity_type}" in name and name != "doa.lifecycle.{entity_type}.transitioned.v1":
+            fail(errors, "templated otel event must be doa.lifecycle.{entity_type}.transitioned.v1")
+        for ref in item.get("attributes", []):
+            if ref["ref"] not in attributes:
+                fail(errors, f"otel event {name} references unknown attribute {ref['ref']}")
+            if ref["requirement_level"] not in OTEL_REQUIREMENT_LEVELS:
+                fail(errors, f"otel event {name}: bad requirement_level {ref['requirement_level']}")
+        for ref in item.get("requirements", []):
+            if ref not in requirements:
+                fail(errors, f"otel event {name} references unknown requirement {ref}")
+    if not any(item["name"] == "doa.lifecycle.{entity_type}.transitioned.v1" for item in semconv["events"]):
+        fail(errors, "otel registry must define the lifecycle transition event")
+
+    metrics = {}
+    for item in semconv["metrics"]:
+        name = item.get("name", "<missing>")
+        if not OTEL_NAME.fullmatch(name):
+            fail(errors, f"otel metric {name}: invalid name")
+        if name in metrics or name in attributes:
+            fail(errors, f"otel metric {name}: duplicate or collides with an attribute name")
+        metrics[name] = item
+        if item.get("instrument") not in OTEL_INSTRUMENTS:
+            fail(errors, f"otel metric {name}: bad instrument {item.get('instrument')}")
+        if not item.get("unit") or not item.get("brief"):
+            fail(errors, f"otel metric {name}: missing unit or brief")
+        for ref in item.get("attributes", []):
+            if ref not in attributes:
+                fail(errors, f"otel metric {name} references unknown attribute {ref}")
+            elif not attributes[ref].get("metric_safe"):
+                fail(errors, f"otel metric {name} uses unbounded-cardinality attribute {ref}")
+        for ref in item.get("requirements", []):
+            if ref not in requirements:
+                fail(errors, f"otel metric {name} references unknown requirement {ref}")
+
+
+def validate_report_checker(errors: list[str]) -> None:
+    spec = importlib.util.spec_from_file_location("check_verification_report", ROOT / "scripts/check_verification_report.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    report = yaml.safe_load(text_of("reference/examples/valid/verification-report--reference.yaml"))
+    problems, _ = module.check_report(report)
+    if problems:
+        fail(errors, f"report checker rejects the reference report: {problems[0]}")
+        return
+    mutations = {
+        "unknown case id": lambda r: r["results"].append({"case": "TC-CORE-99-01", "status": "SKIPPED", "justification": "x"}),
+        "duplicate case id": lambda r: r["results"].append(dict(r["results"][0])),
+        "PASS without PASS scenario": lambda r: r["scenario_results"].__setitem__(0, dict(r["scenario_results"][0], status="FAIL")),
+        "isolated case in staging": lambda r: r["environment"].__setitem__("type", "staging"),
+    }
+    for label, mutate in mutations.items():
+        broken = copy.deepcopy(report)
+        mutate(broken)
+        if not module.check_report(broken)[0]:
+            fail(errors, f"report checker accepts a report with {label}")
+    claim = {"requirements": [{"id": "REQ-CORE-16", "status": "PASS"}]}
+    if not module.check_report(report, claim)[0]:
+        fail(errors, "report checker does not flag a PASS claim requirement whose case FAILED")
+
+
 def validate_claim_checker(errors: list[str]) -> None:
     spec = importlib.util.spec_from_file_location("check_conformance_claim", ROOT / "scripts/check_conformance_claim.py")
     module = importlib.util.module_from_spec(spec)
@@ -539,6 +775,7 @@ def main() -> int:
     if mapping:
         validate_requirements(errors, mapping)
         validate_failure_classes(errors, mapping)
+        validate_verification_kit(errors, machines)
     try:
         validate_claim_checker(errors)
     except Exception as exc:  # aggregate
@@ -563,6 +800,7 @@ def main() -> int:
     print(f"- state machines: {len(machines)} (schemas, diagrams and LIFECYCLE.md consistent)")
     print(f"- Biology-to-IT mechanisms: {len(mapping)} (12 columns, all normative rows traced to requirements)")
     print(f"- conformance requirements: {len(requirements)}")
+    print("- Verification Kit: test plan, fault scenarios, doa.* conventions and report checker consistent")
     print("- Markdown links, tables, whitespace and cross-references: valid")
     print(f"- Mermaid documents: {len(DIAGRAM_MACHINES) + len(OTHER_DIAGRAMS)}")
     print(f"- version: {text_of('VERSION').strip()}")

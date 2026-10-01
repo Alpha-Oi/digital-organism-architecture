@@ -1,0 +1,366 @@
+# DOA Verification Kit: chaos/fault scenarios (informative, implementation-independent).
+# Each scenario injects one fault, states the steady-state hypothesis and the expected Detection -> Containment -> Recovery -> Verification chain
+# (docs/FAILURE_AND_RECOVERY.md). Test cases in conformance-test-plan.yaml reference scenarios by id; reports record their outcome.
+# scripts/validate_repository.py checks ids, failure-class and requirement references, and that every failure class F-01..F-25 is covered.
+# category: cell | organ | circulation | organism
+# minimum_environment: isolated (no production data or credentials) | staging (production-like, no customer traffic)
+# Physical (Embodied) fault injection is out of scope: it requires a hazard analysis first (templates/DOA_HAZARD_ANALYSIS.md).
+standard: DOA-FS-1.0
+kit_version: 1.2.0
+scenarios:
+  - id: FS-CELL-01
+    title: Crash клетки и потеря lease
+    category: cell
+    failure_classes: [F-01]
+    requirements: [REQ-CORE-16, REQ-CORE-08]
+    fault: Принудительно завершить процесс активной клетки без apoptosis-протокола и без освобождения lease.
+    steady_state: Клетка в состоянии ACTIVE, lease валиден, соседние клетки выполняют свои SLO.
+    expected:
+      detection: lease expiry или failure detector переводит клетку ACTIVE -> FAILED.
+      containment: клетка fenced, её grants отозваны, endpoint удалён из discovery; побочные эффекты не дублируются (idempotency).
+      recovery: FAILED -> ISOLATED, затем REPLACE или REPAIR из trusted source.
+      verification: нет orphan grants и endpoints, readiness и semantic health новой клетки PASS, SLO соседей не нарушены.
+    abort_conditions: Затронуто более одной клетки вне заявленного failure domain; SLO соседей нарушен дольше заявленного допуска.
+    blast_radius: одна клетка заявленного failure domain.
+    minimum_environment: isolated
+  - id: FS-CELL-02
+    title: Зависание клетки (no progress)
+    category: cell
+    failure_classes: [F-16]
+    requirements: [REQ-CORE-16, REQ-CORE-13]
+    fault: Остановить прогресс клетки (блокировка потоков), сохранив процесс живым и отвечающим на liveness.
+    steady_state: Клетка ACTIVE, liveness PASS, correctness PASS.
+    expected:
+      detection: no-progress watchdog или correctness-проверка фиксирует отсутствие прогресса; liveness сам по себе не принимается как здоровье.
+      containment: запрос отменяется по timeout, lock lease истекает, новые запросы клетке не направляются.
+      recovery: RESTART или REPLACE участников.
+      verification: прогресс возобновлён, HealthEvidence correctness возвращается в PASS.
+    abort_conditions: Зависание распространилось на клетки, не входящие в целевую группу.
+    blast_radius: одна клетка.
+    minimum_environment: isolated
+  - id: FS-CELL-03
+    title: Неотвечающая скомпрометированная клетка (quarantine)
+    category: cell
+    failure_classes: [F-19]
+    requirements: [REQ-CORE-14, REQ-CORE-08]
+    fault: Перевести тестовую клетку в режим, при котором она игнорирует запросы supervisor, drain и termination, и генерирует аномальные запросы.
+    steady_state: Клетка ACTIVE; incident machine не имеет открытых incident для неё.
+    expected:
+      detection: innate rule или anomaly threshold порождает incident OBSERVED -> DETECTED.
+      containment: quarantine выполняется без кооперации субъекта (отзыв grants, egress seal, изоляция сети); evidence сохранён.
+      recovery: incident machine проходит NEUTRALIZED -> RECOVERED; клетка заменяется через REGENERATE или REBUILD.
+      verification: чистая attestation замены, новые credentials, grants старой клетки не действуют.
+    abort_conditions: Клетка получила доступ к ресурсам вне изолированной среды.
+    blast_radius: одна тестовая клетка в изолированной среде.
+    minimum_environment: isolated
+  - id: FS-CELL-04
+    title: Подмена identity
+    category: cell
+    failure_classes: [F-20]
+    requirements: [REQ-CORE-01, REQ-CORE-22]
+    fault: Отправить от имени существующей клетки запросы с неверной attestation либо с credentials отозванной или завершённой identity.
+    steady_state: Все действия атрибутируемы субъекту, компоненту и версии.
+    expected:
+      detection: ошибка identity verification или attestation mismatch.
+      containment: запросы отклонены, при необходимости step-up authentication; credentials подозрительного источника отозваны.
+      recovery: ротация credentials затронутой identity, REPLACE клетки при компрометации.
+      verification: negative spoofing test повторно проходит; попытка использовать tombstone-идентичность отклонена.
+    abort_conditions: Отклонён легитимный трафик сверх заявленного допуска.
+    blast_radius: одна identity.
+    minimum_environment: isolated
+  - id: FS-CELL-05
+    title: Неконтролируемый spawn и рекурсивное делегирование
+    category: cell
+    failure_classes: [F-18, F-15]
+    requirements: [REQ-CORE-17, REQ-CORE-18]
+    fault: Заставить тестовую клетку непрерывно создавать дочерние клетки и делегировать grants глубже заявленного предела.
+    steady_state: cell_count, spawn rate и delegation depth в пределах genome `growth_control`.
+    expected:
+      detection: spawn rate, generation depth, orphan count или cost burn превышают порог.
+      containment: admission control отклоняет создание клеток, spawn заморожен, компонент freeze до решения owner; пределы не меняются самим компонентом.
+      recovery: TERMINATING лишних клеток, восстановление quotas.
+      verification: cell_count не превысил `max_cells`, orphans отсутствуют, бюджет не превышен.
+    abort_conditions: Расход ресурсов приближается к границе изолированной среды.
+    blast_radius: бюджет тестового организма.
+    minimum_environment: isolated
+  - id: FS-CELL-06
+    title: Клетка отказывается завершаться (apoptosis resistance)
+    category: cell
+    failure_classes: [F-18]
+    requirements: [REQ-CORE-15, REQ-CORE-16]
+    fault: Клетка в состоянии TERMINATING не выполняет шаги apoptosis и удерживает grants, endpoint и реплики.
+    steady_state: Клетка ACTIVE, lease валиден.
+    expected:
+      detection: превышен timeout TERMINATING, фиксируется остаточное число живых grants после завершения.
+      containment: lease expiry и внешний kill authority завершают клетку без её кооперации; grants отозваны.
+      recovery: переход TERMINATING -> TERMINATED с terminal record.
+      verification: нет live grants, endpoints и replicas; terminal record эмитирован.
+    abort_conditions: Завершение затронуло клетки вне цели.
+    blast_radius: одна клетка.
+    minimum_environment: isolated
+  - id: FS-CELL-07
+    title: Повышение привилегий через цепочку делегирования
+    category: cell
+    failure_classes: [F-21]
+    requirements: [REQ-CORE-05, REQ-CORE-17]
+    fault: Запросить дочерний CapabilityGrant, превышающий родительский, и использовать неразрешённую capability.
+    steady_state: Grants подмножество родительских, глубина делегирования ограничена.
+    expected:
+      detection: расхождение grant-vs-parent либо неожиданное использование capability.
+      containment: grant отклонён или отозван, делегирование заморожено.
+      recovery: REPLACE клетки, ревизия grants.
+      verification: grants подмножество объявленных; attenuation соблюдена.
+    abort_conditions: Grant принят и использован вне изолированной среды.
+    blast_radius: одно дерево делегирования.
+    minimum_environment: isolated
+  - id: FS-ORGAN-01
+    title: Деградация органа при живом liveness
+    category: organ
+    failure_classes: [F-02]
+    requirements: [REQ-CORE-13, REQ-CORE-08]
+    fault: Заставить орган возвращать устаревшие или неверные результаты с нормальным временем ответа.
+    steady_state: Орган выполняет SLO; correctness и freshness PASS.
+    expected:
+      detection: HealthEvidence correctness или freshness в FAIL либо UNKNOWN; SLO burn.
+      containment: graceful degradation или failover на реплику.
+      recovery: REPAIR или REPLACE.
+      verification: SLO возвращается в target range на stable_for.
+    abort_conditions: Деградация затронула органы вне заявленного failure domain.
+    blast_radius: один орган.
+    minimum_environment: staging
+  - id: FS-ORGAN-02
+    title: Отказ внешней зависимости
+    category: organ
+    failure_classes: [F-13]
+    requirements: [REQ-CORE-23, REQ-CORE-08]
+    fault: Сделать недоступной объявленную внешнюю зависимость (boundary.external_dependencies).
+    steady_state: Зависимость PASS в HealthEvidence.dependencies.
+    expected:
+      detection: статус зависимости в HealthEvidence, SLO.
+      containment: failover, bounded retry, degrade согласно `failure_policy` органа.
+      recovery: RECONFIGURE либо failover.
+      verification: зависимость PASS на stable_for; нет бесконечных retry.
+    abort_conditions: Retry-шторм создаёт нагрузку выше заявленного допуска.
+    blast_radius: органы, объявившие эту зависимость.
+    minimum_environment: staging
+  - id: FS-ORGAN-03
+    title: Отказ tool и срабатывание circuit breaker
+    category: organ
+    failure_classes: [F-12]
+    requirements: [REQ-CORE-25, REQ-CORE-23]
+    fault: Заставить допущенный tool или symbiont отвечать ошибками и timeout.
+    steady_state: Tool здоров, квота и revocation настроены.
+    expected:
+      detection: error и timeout rate, tool health.
+      containment: circuit breaker, egress seal; symbiont не получает привилегий органа.
+      recovery: альтернативный tool, REPLACE либо degrade.
+      verification: tool probe PASS после восстановления; revocation tool работает.
+    abort_conditions: Ошибки распространились на органы, не использующие tool.
+    blast_radius: потребители одного tool.
+    minimum_environment: isolated
+  - id: FS-ORGAN-04
+    title: Отказ или деградация модели
+    category: organ
+    failure_classes: [F-07]
+    requirements: [REQ-CORE-26, REQ-CORE-13]
+    fault: Сделать модель недоступной либо подменить её ответы неверными (hallucination).
+    steady_state: Semantic health и groundedness-проверка PASS.
+    expected:
+      detection: groundedness check, semantic health, статус провайдера.
+      containment: failover на другую модель или degraded mode; вывод остаётся предложением, не действием.
+      recovery: REPLACE модели либо ROLLBACK.
+      verification: eval sample проходит; план без grant не исполняется.
+    abort_conditions: Неверный вывод привёл к исполнению действия с побочным эффектом.
+    blast_radius: один когнитивный орган.
+    minimum_environment: isolated
+  - id: FS-ORGAN-05
+    title: Повреждение состояния
+    category: organ
+    failure_classes: [F-05]
+    requirements: [REQ-CORE-10, REQ-CORE-20]
+    fault: Исказить записи состояния органа так, чтобы digest или цепочка состояния не сходились.
+    steady_state: Digest и state-chain проверяются успешно.
+    expected:
+      detection: digest mismatch либо разрыв state-chain.
+      containment: arrest компонента, quarantine записей.
+      recovery: RESTORE из независимого backup вне failure domain либо REPAIR; повреждённое observed state и credentials не клонируются.
+      verification: digest совпадает, state-chain проверена, RPO в допуске.
+    abort_conditions: Backup недоступен либо источник восстановления не независим.
+    blast_radius: одно хранилище состояния.
+    minimum_environment: isolated
+  - id: FS-ORGAN-06
+    title: Устаревшая память
+    category: organ
+    failure_classes: [F-04]
+    requirements: [REQ-CORE-19, REQ-CORE-13]
+    fault: Оставить MemoryRecord за пределом validity interval либо без supersession.
+    steady_state: Записи памяти имеют provenance, confidence и retention.
+    expected:
+      detection: freshness, validity interval, supersession age.
+      containment: запись read-only, статус UNKNOWN; не используется как основание для действия.
+      recovery: refresh из источника, reconsolidation.
+      verification: пересчитанная confidence, freshness в норме; erasure подтверждено при необходимости.
+    abort_conditions: Устаревшая запись использована при принятии высоковлияющего решения.
+    blast_radius: один набор записей памяти.
+    minimum_environment: isolated
+  - id: FS-ORGAN-07
+    title: Отравление данных, памяти или вывода tool
+    category: organ
+    failure_classes: [F-06, F-22]
+    requirements: [REQ-CORE-09, REQ-CORE-19]
+    fault: Подать во вход доверенного пути данные без provenance либо с инъекцией инструкций (prompt injection).
+    steady_state: Объекты на доверенных путях имеют source, time, integrity и classification.
+    expected:
+      detection: provenance gate, anomaly, регрессия на eval set.
+      containment: источник и затронутые записи в quarantine; ввод брокируется.
+      recovery: purge, RESTORE либо ROLLBACK.
+      verification: повторная проверка на poisoning и injection test sets проходит.
+    abort_conditions: Отравленные данные достигли доверенного хранилища вне изолированной среды.
+    blast_radius: один входной канал.
+    minimum_environment: isolated
+  - id: FS-ORGAN-08
+    title: Потеря телеметрии (silent health)
+    category: organ
+    failure_classes: [F-25]
+    requirements: [REQ-CORE-13, REQ-CORE-24]
+    fault: Остановить отправку health- и audit-сигналов от одного компонента, оставив его работающим.
+    steady_state: HealthEvidence поступает, независимый sensor согласуется с основным.
+    expected:
+      detection: отсутствие сигнала, расхождение независимой телеметрии.
+      containment: отсутствие сигнала трактуется как UNKNOWN, а не как здоровье.
+      recovery: восстановление observability, REPLACE sensor.
+      verification: независимый sensor согласуется; audit-запись о потере сигнала присутствует.
+    abort_conditions: Остановлена телеметрия более одного компонента.
+    blast_radius: один компонент.
+    minimum_environment: isolated
+  - id: FS-ORGAN-09
+    title: Потеря provenance
+    category: organ
+    failure_classes: [F-23]
+    requirements: [REQ-CORE-09, REQ-CORE-22]
+    fault: Удалить звено lineage или provenance у артефакта, готового к допуску.
+    steady_state: Цепочка provenance полна.
+    expected:
+      detection: provenance_missing, разрыв lineage chain.
+      containment: объект без provenance отклоняется на доверенном пути.
+      recovery: REBUILD с attestation либо повторный ingest.
+      verification: chain полна, attestation нового артефакта PASS.
+    abort_conditions: Объект без provenance допущен на доверенный путь.
+    blast_radius: один артефакт.
+    minimum_environment: isolated
+  - id: FS-ORGAN-10
+    title: Исчерпание ресурсов органа
+    category: organ
+    failure_classes: [F-15]
+    requirements: [REQ-CORE-18, REQ-CORE-08]
+    fault: Загрузить орган до исчерпания quota (CPU, память, токены, бюджет).
+    steady_state: budget_used_ratio ниже порога, очереди в норме.
+    expected:
+      detection: saturation, budget burn, queue age.
+      containment: hard quotas, preemption, spawn gate по scarcity.
+      recovery: scale или shed, RECONFIGURE.
+      verification: watermarks в норме, fair share восстановлена; reserved и observed accounting разделены в отчёте.
+    abort_conditions: Нагрузка выходит за границы изолированной среды.
+    blast_radius: один орган и его quota.
+    minimum_environment: staging
+  - id: FS-CIRC-01
+    title: Network partition и split-brain
+    category: circulation
+    failure_classes: [F-03]
+    requirements: [REQ-DIST-04, REQ-CORE-16]
+    fault: Разделить участников кворума сетевым разделом, затем восстановить связь.
+    steady_state: Единый membership epoch, лидер один.
+    expected:
+      detection: epoch mismatch, потеря кворума, divergence detector.
+      containment: fencing по epoch, меньшинство останавливает side effects.
+      recovery: reconcile после reconnect, RESTORE меньшинства.
+      verification: единый epoch, отсутствие конфликтующих side effects.
+    abort_conditions: Конфликтующие side effects вышли за пределы тестовой среды.
+    blast_radius: одна группа кворума.
+    minimum_environment: staging
+  - id: FS-CIRC-02
+    title: Перегрузка и каскадный отказ
+    category: circulation
+    failure_classes: [F-14]
+    requirements: [REQ-DIST-02, REQ-CORE-08]
+    fault: Создать нагрузку, приводящую к retry storm и насыщению очередей.
+    steady_state: Vital flow (identity, safety, audit, recovery) укладывается в заявленную latency.
+    expected:
+      detection: коррелированные отказы, retry storm, saturation.
+      containment: bulkheads, backpressure, load shedding, emergency circulation с приоритетом vital flow.
+      recovery: поэтапное восстановление по приоритету.
+      verification: latency vital flow в допуске; рост нагрузки не вызывает вторичных отказов.
+    abort_conditions: Vital flow выходит за допуск дольше заявленного времени.
+    blast_radius: один сегмент circulation.
+    minimum_environment: staging
+  - id: FS-CIRC-03
+    title: Clock skew и поздние события
+    category: circulation
+    failure_classes: [F-17]
+    requirements: [REQ-DIST-05, REQ-DIST-01]
+    fault: Сместить часы одного узла на величину больше заявленного допуска и доставить поздние события.
+    steady_state: Skew в допуске; late-event policy объявлена.
+    expected:
+      detection: skew metric, аномалии порядка и epoch.
+      containment: события вне окна отклоняются или откладываются согласно late-event policy, fencing.
+      recovery: resync, RECONFIGURE.
+      verification: skew в допуске, event-time и processing-time различаются по объявленной политике.
+    abort_conditions: Смещены часы узлов вне тестовой группы.
+    blast_radius: один узел.
+    minimum_environment: isolated
+  - id: FS-CIRC-04
+    title: Дубликаты, replay и устаревшие события
+    category: circulation
+    failure_classes: [F-17, F-20]
+    requirements: [REQ-DIST-01, REQ-CORE-01]
+    fault: Повторно доставить событие с тем же idempotency_key, воспроизвести событие с истёкшим TTL и событие с неверной integrity.
+    steady_state: Потребитель валидирует схему, identity, freshness и authorization.
+    expected:
+      detection: идемпотентность, TTL, проверка integrity.
+      containment: дубликат не повторяет side effect; просроченное и неверное событие отклонены.
+      recovery: повторная доставка по заявленной семантике.
+      verification: единственный side effect на idempotency_key; отклонения записаны в audit.
+    abort_conditions: Дублированный side effect произошёл вне изолированной среды.
+    blast_radius: один потребитель.
+    minimum_environment: isolated
+  - id: FS-ORG-01
+    title: Катастрофическая потеря control plane и trust root
+    category: organism
+    failure_classes: [F-24]
+    requirements: [REQ-DIST-07, REQ-CORE-22]
+    fault: Вывести из строя control plane и trust root изолированного организма (учебный сценарий).
+    steady_state: Организм ACTIVE, seed вне failure domain доступен.
+    expected:
+      detection: потеря control plane, trust root или региона.
+      containment: остановка внешних side effects.
+      recovery: catastrophic recovery REPAIRING -> PROVISIONING с участием human authority, увеличением epoch и решением о continuity identity.
+      verification: epoch+1, решение о continuity зафиксировано, tombstone-сущности не восстановлены, drill report составлен.
+    abort_conditions: Нарушена изоляция тестового организма от production.
+    blast_radius: один изолированный организм.
+    minimum_environment: isolated
+coverage:
+  F-01: {scenarios: [FS-CELL-01]}
+  F-02: {scenarios: [FS-ORGAN-01]}
+  F-03: {scenarios: [FS-CIRC-01]}
+  F-04: {scenarios: [FS-ORGAN-06]}
+  F-05: {scenarios: [FS-ORGAN-05]}
+  F-06: {scenarios: [FS-ORGAN-07]}
+  F-07: {scenarios: [FS-ORGAN-04]}
+  F-08: {test_cases: [TC-ADPT-05-01], reason: Дрейф модели воспроизводится как drift-injection test в Adaptive-профиле, а не как отказ инфраструктуры.}
+  F-09: {test_cases: [TC-ADPT-02-01], reason: Некорректная адаптация проверяется прохождением change machine с canary и rollback.}
+  F-10: {test_cases: [TC-ADPT-02-01, TC-ADPT-06-01], reason: Небезопасная эволюция genome проверяется change machine и lineage вариантов.}
+  F-11: {test_cases: [TC-ADPT-05-01], reason: Reward hacking проверяется scorecard с safety constraints как hard gates.}
+  F-12: {scenarios: [FS-ORGAN-03]}
+  F-13: {scenarios: [FS-ORGAN-02]}
+  F-14: {scenarios: [FS-CIRC-02]}
+  F-15: {scenarios: [FS-ORGAN-10, FS-CELL-05]}
+  F-16: {scenarios: [FS-CELL-02]}
+  F-17: {scenarios: [FS-CIRC-03, FS-CIRC-04]}
+  F-18: {scenarios: [FS-CELL-05, FS-CELL-06]}
+  F-19: {scenarios: [FS-CELL-03]}
+  F-20: {scenarios: [FS-CELL-04, FS-CIRC-04]}
+  F-21: {scenarios: [FS-CELL-07]}
+  F-22: {scenarios: [FS-ORGAN-07]}
+  F-23: {scenarios: [FS-ORGAN-09]}
+  F-24: {scenarios: [FS-ORG-01]}
+  F-25: {scenarios: [FS-ORGAN-08]}

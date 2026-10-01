@@ -62,3 +62,11 @@
 Для review normative diff (`GOVERNANCE.md`, раздел 5) значимы: `specifications/conformance-claim.schema.json`, `specifications/requirements.yaml` (формулировки `REQ-CORE-18`, `REQ-CORE-22`, evidence `REQ-CORE-23`), `specifications/failure-classes.yaml`, `docs/CONFORMANCE.md`, `docs/FAILURE_AND_RECOVERY.md`, `docs/LIFECYCLE.md`, `docs/METABOLISM.md`.
 
 Внешние условия выпуска: успешный запуск workflow `Validate DOA standard` на release commit, tag `v1.1.0` на этом commit и GitHub Release из него. Tag создаёт владелец репозитория.
+
+## Release v1.2.0
+
+`v1.2.0` — minor-релиз Verification Kit: additive и informative артефакты (`docs/VERIFICATION_KIT.md`, `verification/*`, схема и проверка отчёта, два шаблона); нормативные тексты, реестр требований и существующие схемы не менялись, полный список и анализ совместимости — в `CHANGELOG.md`, раздел `[1.2.0]`. Критерии выше проверяются тем же `scripts/validate_repository.py`; для kit добавлены проверки покрытия требований кейсами, покрытия классов отказа сценариями, реестра `doa.*` и поведения проверки отчёта.
+
+Для review значимы: согласованность `verification/*` с `specifications/requirements.yaml` и `specifications/failure-classes.yaml`, правила безопасности прогона (`docs/VERIFICATION_KIT.md`, разделы 2 и 4), формулировки ограничений. Accepted risks этого релиза: независимая реализация не выполняла kit, а реестр `doa.*` не проверялся инструментами OpenTelemetry.
+
+Внешние условия выпуска: успешный запуск workflow `Validate DOA standard` на release commit, tag `v1.2.0` на этом commit и GitHub Release из него. Tag создаёт владелец репозитория.

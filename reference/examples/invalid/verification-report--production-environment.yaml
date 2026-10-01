@@ -1,0 +1,14 @@
+standard: DOA-FS-1.0
+plan_version: 1.2.0
+implementation: example-organism
+version: 0.4.2
+run_id: vr-2026-10-01-003
+run_date: '2026-10-01'
+executor: platform-reliability team
+environment:
+  type: production
+  description: Боевой кластер.
+results:
+  - case: TC-CORE-08-01
+    status: PASS
+    evidence_ref: evidence/cell-kill-2026-10-01.md@4f2a9c1

@@ -14,7 +14,7 @@
 - различие reserved и observed accounting (`REQ-CORE-18`), область tombstone (`REQ-CORE-22`);
 - предупреждения checker'а для подвижных ссылок на evidence.
 
-## 1.2 — Verification Kit
+## 1.2 — Verification Kit (выпущен)
 
 - executable conformance test plan;
 - chaos/fault scenarios для cell, organ и circulation failures;

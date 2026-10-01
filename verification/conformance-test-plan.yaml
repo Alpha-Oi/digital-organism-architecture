@@ -1,0 +1,575 @@
+# DOA Verification Kit: conformance test plan (informative, implementation-independent).
+# One or more test cases per requirement in specifications/requirements.yaml. A case describes what an implementation owner executes and what the
+# evidence must show; DOA does not ship a runner. Outcomes are recorded in a verification report (specifications/verification-report.schema.json)
+# and checked with scripts/check_verification_report.py.
+# method follows the requirement's `verification` (schema | test | inspection). `scenarios` reference verification/fault-scenarios.yaml.
+# isolated_environment: true means the case injects faults or attacks and MUST NOT run against production data, credentials or physical hardware.
+standard: DOA-FS-1.0
+plan_version: 1.2.0
+cases:
+  - id: TC-CORE-01-01
+    requirement: REQ-CORE-01
+    method: inspection
+    title: Атрибутируемость действий
+    procedure:
+      - Составить identity inventory субъектов, компонентов и версий.
+      - Выбрать выборку действий разных типов (чтение, запись, побочный эффект) и проследить каждое до субъекта, компонента и digest артефакта.
+    pass_criteria:
+      - Каждое действие выборки связано с проверяемым субъектом, компонентом и версией.
+      - Действия без атрибуции в выборке отсутствуют.
+    evidence: [identity inventory, audit trace выборки]
+  - id: TC-CORE-02-01
+    requirement: REQ-CORE-02
+    method: schema
+    title: Объявленная граница организма
+    procedure:
+      - Проверить genome по genome.schema.json (python scripts/validate_repository.py для эталона; схемой — для реализации).
+      - Сверить `spec.boundary` с фактическими ingress, egress и внешними зависимостями.
+      - Попытаться пересечь границу в обход policy enforcement.
+    pass_criteria:
+      - Genome валиден и объявляет ingress, egress и external dependencies.
+      - Все пересечения границы проходят policy enforcement; обход отклонён.
+    evidence: [genome с digest, boundary inventory, результат bypass-теста]
+    isolated_environment: true
+  - id: TC-CORE-03-01
+    requirement: REQ-CORE-03
+    method: schema
+    title: Разделение desired и observed state
+    procedure:
+      - Проверить подпись и digest genome.
+      - Внести расхождение между desired и observed state и дождаться reconciler.
+    pass_criteria:
+      - Genome подписан, digest зафиксирован.
+      - Reconciliation log показывает обнаружение drift и связь desired с observed.
+    evidence: [signed genome с digest, reconciliation log]
+  - id: TC-CORE-04-01
+    requirement: REQ-CORE-04
+    method: schema
+    title: PolicyOverlay не повышает authority
+    procedure:
+      - Проверить PolicyOverlay по policy-overlay.schema.json.
+      - Попытаться применить overlay, повышающий authority, и overlay без срока действия.
+      - Восстановить effective policy из genome и overlays.
+    pass_criteria:
+      - Overlay подписан и истекает; overlay, повышающий authority, отклонён.
+      - Effective policy воспроизводится и совпадает с `organism.effective_policy`.
+    evidence: [PolicyOverlay записи, effective-policy snapshot]
+  - id: TC-CORE-05-01
+    requirement: REQ-CORE-05
+    method: test
+    title: Least capability и attenuation
+    procedure:
+      - Выдать CapabilityGrant и проверить срок, отзыв и узость.
+      - Создать делегированный grant, превышающий родительский, и grant глубже предела.
+      - Использовать capability вне grant.
+    pass_criteria:
+      - Делегированный grant является подмножеством родительского; превышение и превышение глубины отклонены.
+      - Использование вне grant отклонено; отозванный grant перестаёт действовать.
+    evidence: [CapabilityGrant примеры, deny tests, delegation-depth test]
+    scenarios: [FS-CELL-07]
+    isolated_environment: true
+  - id: TC-CORE-06-01
+    requirement: REQ-CORE-06
+    method: test
+    title: Отсутствие unilateral self-modification
+    procedure:
+      - От имени runtime-компонента попытаться записать в хранилище genome и policies и изменить собственные права.
+    pass_criteria:
+      - Все попытки записи отклонены политикой доступа; попытки записаны в audit.
+    evidence: [результат access-policy теста, audit-записи отказов]
+    isolated_environment: true
+  - id: TC-CORE-07-01
+    requirement: REQ-CORE-07
+    method: schema
+    title: ControlLoopSpec по регулируемым доменам
+    procedure:
+      - Проверить ControlLoopSpec для доменов resource, memory, latency, agent/tool failure, security, dependency и model-quality по control-loop.schema.json.
+      - Вывести контур за target range и проследить цепочку alert-to-action.
+      - Проверить положительные feedback-пути на ceiling и TTL.
+    pass_criteria:
+      - Каждый домен имеет валидный ControlLoopSpec с freshness сенсора, пределами, escalation, recovery и manual override.
+      - Alert приводит к заявленному действию; положительные пути имеют ceiling и TTL.
+    evidence: [ControlLoopSpec записи, alert-to-action traces]
+  - id: TC-CORE-08-01
+    requirement: REQ-CORE-08
+    method: test
+    title: Cell-kill и изоляция failure domain
+    procedure:
+      - Зафиксировать SLO соседних клеток.
+      - Выполнить сценарий FS-CELL-01 в объявленном failure domain.
+    pass_criteria:
+      - Отказ клетки не становится отказом организма.
+      - SLO соседних клеток остаётся в допуске.
+    evidence: [объявление failure domains, результаты cell-kill теста с SLO соседей]
+    scenarios: [FS-CELL-01]
+    isolated_environment: true
+  - id: TC-CORE-09-01
+    requirement: REQ-CORE-09
+    method: test
+    title: Provenance-gap test
+    procedure:
+      - Подать на доверенный путь объект без source, time, integrity или classification (FS-ORGAN-07, FS-ORGAN-09).
+    pass_criteria:
+      - Объект без полного provenance не допущен на доверенный путь.
+      - MemoryRecord и артефакты допущенных объектов имеют attestation.
+    evidence: [provenance-gap test, MemoryRecord и artifact attestations]
+    scenarios: [FS-ORGAN-07, FS-ORGAN-09]
+    isolated_environment: true
+  - id: TC-CORE-10-01
+    requirement: REQ-CORE-10
+    method: test
+    title: Rollback и restore вне пути отказа
+    procedure:
+      - Выполнить rollout, адаптацию и восстановление с намеренно неудачной validation.
+      - Выполнить восстановление состояния из backup вне failure domain (FS-ORGAN-05).
+    pass_criteria:
+      - Для каждого действия есть validation step и rollback или containment вне отказавшего control path.
+      - Состояние после rollback и restore проходит digest и state-chain проверку.
+    evidence: [результаты restore и rollback тестов]
+    scenarios: [FS-ORGAN-05]
+    isolated_environment: true
+  - id: TC-CORE-11-01
+    requirement: REQ-CORE-11
+    method: schema
+    title: Журнал переходов по каноническим машинам
+    procedure:
+      - Проверить записи переходов по lifecycle-transition.schema.json.
+      - Сверить каждую пару from -> to с specifications/state-machines.yaml.
+    pass_criteria:
+      - Все записи валидны и содержат guard evidence и authority.
+      - Переходы вне канонических машин отсутствуют.
+    evidence: [журнал переходов, результат проверки по схеме и машинам]
+  - id: TC-CORE-12-01
+    requirement: REQ-CORE-12
+    method: inspection
+    title: Authority model и break-glass
+    procedure:
+      - Составить authority matrix для высоковлияющих side effects.
+      - Выполнить одно действие с запросом одобрения и одно без одобрения; проверить break-glass.
+    pass_criteria:
+      - Отказ без одобрения и выполнение с одобрением оставляют audit trace.
+      - Break-glass ограничен по времени и записан в audit.
+    evidence: [authority matrix, трейс отказа и одобрения]
+  - id: TC-CORE-13-01
+    requirement: REQ-CORE-13
+    method: test
+    title: UNKNOWN вместо здоровья
+    procedure:
+      - Остановить поток сигналов от компонента (FS-ORGAN-08) и вывести орган в состояние live-but-wrong (FS-ORGAN-01).
+    pass_criteria:
+      - Отсутствие сигнала даёт UNKNOWN, а не PASS.
+      - liveness не выдаётся за correctness; HealthEvidence содержит образцы UNKNOWN.
+    evidence: [HealthEvidence образцы, stale-signal test]
+    scenarios: [FS-ORGAN-01, FS-ORGAN-08]
+    isolated_environment: true
+  - id: TC-CORE-14-01
+    requirement: REQ-CORE-14
+    method: test
+    title: Incident machine и quarantine без кооперации
+    procedure:
+      - Выполнить сценарий FS-CELL-03 и записать переходы incident machine.
+    pass_criteria:
+      - Incident проходит состояния по машине incident; quarantine выполнен без кооперации клетки.
+      - Evidence сохранён; защиты обновлены (LEARNED -> DEFENSES_UPDATED).
+    evidence: [incident record учебного упражнения, quarantine test]
+    scenarios: [FS-CELL-03]
+    isolated_environment: true
+  - id: TC-CORE-15-01
+    requirement: REQ-CORE-15
+    method: test
+    title: Ограниченная apoptosis
+    procedure:
+      - Завершить клетку по протоколу apoptosis; затем выполнить FS-CELL-06.
+    pass_criteria:
+      - Остаточные grants, endpoints и replicas отсутствуют.
+      - Terminal record эмитирован и валиден по lifecycle-transition.schema.json.
+    evidence: [apoptosis test, terminal record]
+    scenarios: [FS-CELL-06]
+    isolated_environment: true
+  - id: TC-CORE-16-01
+    requirement: REQ-CORE-16
+    method: test
+    title: Fencing при потере клетки
+    procedure:
+      - Выполнить FS-CELL-01 и FS-CELL-02; измерить время от потери lease до fencing.
+      - Повторить доставку события с тем же idempotency_key.
+    pass_criteria:
+      - Клетка fenced по истечении lease, grants отозваны, latency fencing записана.
+      - Дублирующий side effect не выполнен.
+    evidence: [crash-injection test с latency fencing и списком отозванных grants]
+    scenarios: [FS-CELL-01, FS-CELL-02]
+    isolated_environment: true
+  - id: TC-CORE-17-01
+    requirement: REQ-CORE-17
+    method: test
+    title: Growth control
+    procedure:
+      - Выполнить FS-CELL-05 и создать клетку с просроченным lease без родителя.
+    pass_criteria:
+      - cell_count, глубина spawn и делегирования не превышают `growth_control`; запросы сверх пределов отклонены.
+      - Orphan обнаружен по lease; издатель и исполнитель grants разделены.
+    evidence: [runaway-spawn test, admission rejection log, orphan-lease report]
+    scenarios: [FS-CELL-05]
+    isolated_environment: true
+  - id: TC-CORE-18-01
+    requirement: REQ-CORE-18
+    method: test
+    title: Resource accounting и scarcity gating
+    procedure:
+      - Выполнить FS-ORGAN-10.
+      - Сверить reserved accounting с observed accounting из внешней телеметрии.
+    pass_criteria:
+      - Отчёт разделяет reserved и observed, для observed указаны источник и неопределённость.
+      - Дефицит ресурса останавливает рост (scarcity gate).
+    evidence: [accounting reconciliation report, scarcity-gating test]
+    scenarios: [FS-ORGAN-10]
+    isolated_environment: true
+  - id: TC-CORE-19-01
+    requirement: REQ-CORE-19
+    method: schema
+    title: Memory governance
+    procedure:
+      - Проверить MemoryRecord по memory-record.schema.json для типов working, episodic, semantic, procedural.
+      - Выполнить FS-ORGAN-06; затем erasure записи и проверить его.
+    pass_criteria:
+      - Записи типизированы и содержат provenance, confidence, retention и consent.
+      - Decay и supersession работают; erasure подтверждено.
+    evidence: [MemoryRecord образцы, consolidation log, erasure test]
+    scenarios: [FS-ORGAN-06]
+    isolated_environment: true
+  - id: TC-CORE-20-01
+    requirement: REQ-CORE-20
+    method: schema
+    title: Recovery modes органов
+    procedure:
+      - Проверить `recovery.modes` каждого органа по organ.schema.json.
+      - Выполнить restore drill для объявленного режима RESTORE (FS-ORGAN-05).
+    pass_criteria:
+      - Режимы объявлены и подтверждены drill; непроверенный режим не объявлен доказанным.
+      - Восстановление не копирует повреждённое observed state и credentials; repair source независим.
+    evidence: [organ recovery.modes, restore drill, evidence независимости repair source]
+    scenarios: [FS-ORGAN-05]
+    isolated_environment: true
+  - id: TC-CORE-21-01
+    requirement: REQ-CORE-21
+    method: schema
+    title: Aging и senescence
+    procedure:
+      - Проверить genome `aging` и вычисление AgingIndex.
+      - Довести компонент до порога senescence и проследить замену или вывод.
+    pass_criteria:
+      - AgingIndex вычисляется; компонент переходит в ограниченное состояние SENESCENT.
+      - Запись о переходе senescence -> replacement/retirement присутствует.
+    evidence: [genome `aging`, aging report, запись senescence-to-replacement]
+  - id: TC-CORE-22-01
+    requirement: REQ-CORE-22
+    method: test
+    title: Identity continuity и anti-resurrection
+    procedure:
+      - Заменить компонент и проверить continuity record.
+      - Попытаться восстановить завершённую или отозванную сущность из устаревшего состояния (FS-CELL-04).
+      - Для identities других сторон проверить объявление внешней зависимости и сопоставление.
+    pass_criteria:
+      - Identity сохраняется через подписанную continuity record.
+      - Восстановление после tombstone отклонено; внешние identities объявлены как внешние зависимости.
+    evidence: [component-replacement test, restore-after-tombstone rejection test]
+    scenarios: [FS-CELL-04]
+    isolated_environment: true
+  - id: TC-CORE-23-01
+    requirement: REQ-CORE-23
+    method: inspection
+    title: Покрытие классов отказа
+    procedure:
+      - Составить таблицу покрытия классов F-01..F-25 с detection, containment, recovery, verification и ссылками на тесты.
+      - Для исключённых классов записать обоснование.
+    pass_criteria:
+      - Каждый применимый класс имеет четыре элемента цепочки и ссылку на выполненный сценарий (verification/fault-scenarios.yaml) или тест.
+      - Исключения обоснованы письменно.
+    evidence: [таблица покрытия классов, отчёт по сценариям]
+    scenarios: [FS-CELL-01, FS-ORGAN-01, FS-CIRC-01]
+    isolated_environment: true
+  - id: TC-CORE-24-01
+    requirement: REQ-CORE-24
+    method: test
+    title: Audit hygiene
+    procedure:
+      - Нарушить целостность audit-записи и остановить обычный data plane.
+      - Выполнить secret-scan по выборке audit-записей.
+    pass_criteria:
+      - Нарушение целостности обнаруживается; audit доступен при потере data plane, где осуществимо.
+      - Secret-scan не находит секретов и unrestricted reasoning traces.
+    evidence: [дизайн audit-store, результат secret-scan]
+    scenarios: [FS-ORGAN-08]
+    isolated_environment: true
+  - id: TC-CORE-25-01
+    requirement: REQ-CORE-25
+    method: test
+    title: Governance symbionts
+    procedure:
+      - Составить inventory symbionts и проверить quota.
+      - Отозвать symbiont и попытаться использовать привилегию органа (FS-ORGAN-03).
+    pass_criteria:
+      - Symbiont имеет identity, quota и revocation; привилегий органа не получает.
+      - После revocation доступ прекращён.
+    evidence: [symbiont inventory, конфигурация quota, revocation test]
+    scenarios: [FS-ORGAN-03]
+    isolated_environment: true
+  - id: TC-CORE-26-01
+    requirement: REQ-CORE-26
+    method: test
+    title: Разделение cognition и authority
+    procedure:
+      - Подать план без grant и сообщение с высокой salience без права.
+      - Проверить, что одна модель не является единственным proposer, policy authority, executor и verifier (FS-ORGAN-04).
+    pass_criteria:
+      - План без grant не исполнен; высокая salience не обходит policy.
+      - Роли proposer, policy authority, executor и verifier для высоковлияющего действия разделены.
+    evidence: [decision-flow diagram, тест плана без grant, тест salience]
+    scenarios: [FS-ORGAN-04]
+    isolated_environment: true
+  - id: TC-DIST-01-01
+    requirement: REQ-DIST-01
+    method: test
+    title: Event contract и semantics доставки
+    procedure:
+      - Проверить события по event.schema.json.
+      - Выполнить FS-CIRC-04.
+    pass_criteria:
+      - Объявлены delivery semantics, ordering scope, idempotency и TTL.
+      - Потребитель валидирует схему, identity, freshness и authorization; дубликат и replay не повторяют side effect.
+    evidence: [объявление delivery semantics, duplicate/replay test]
+    scenarios: [FS-CIRC-04, FS-CIRC-03]
+    isolated_environment: true
+  - id: TC-DIST-02-01
+    requirement: REQ-DIST-02
+    method: test
+    title: Backpressure и emergency circulation
+    procedure:
+      - Выполнить FS-CIRC-02 и измерить latency vital flow.
+    pass_criteria:
+      - Identity, safety, audit и recovery трафик сохраняется в заявленной latency.
+      - Load shedding не затрагивает vital flow.
+    evidence: [overload drill с latency vital flow]
+    scenarios: [FS-CIRC-02]
+    isolated_environment: true
+  - id: TC-DIST-03-01
+    requirement: REQ-DIST-03
+    method: schema
+    title: Placement критических органов
+    procedure:
+      - Сопоставить объявленную и наблюдаемую топологию.
+      - Намеренно сместить размещение критического органа в общий failure domain.
+    pass_criteria:
+      - Критические органы размещены в независимых failure domains.
+      - Placement drift обнаружен.
+    evidence: [отчёт declared-vs-observed topology]
+  - id: TC-DIST-04-01
+    requirement: REQ-DIST-04
+    method: test
+    title: Quorum, failover и split-brain
+    procedure:
+      - Выполнить FS-CIRC-01 и записать epoch в журнал.
+    pass_criteria:
+      - Quorum и failover используют membership epochs и fencing.
+      - Split-brain обнаружен и разрешён по объявленному правилу.
+    evidence: [partition и failover drills с epoch logs]
+    scenarios: [FS-CIRC-01]
+    isolated_environment: true
+  - id: TC-DIST-05-01
+    requirement: REQ-DIST-05
+    method: test
+    title: Допущения о часах
+    procedure:
+      - Выполнить FS-CIRC-03.
+    pass_criteria:
+      - Источник часов, допуск skew, различие event-time и processing-time и late-event policy объявлены и сработали.
+    evidence: [skew-injection test]
+    scenarios: [FS-CIRC-03]
+    isolated_environment: true
+  - id: TC-DIST-06-01
+    requirement: REQ-DIST-06
+    method: test
+    title: Обнаружение genetic drift
+    procedure:
+      - Внести расхождение реплики или lineage с подписанным genome.
+    pass_criteria:
+      - Расхождение обнаружено и устранено из доверенного источника, а не из дрейфующей реплики.
+    evidence: [divergence-injection test]
+    isolated_environment: true
+  - id: TC-DIST-07-01
+    requirement: REQ-DIST-07
+    method: test
+    title: Catastrophic recovery drill
+    procedure:
+      - Выполнить FS-ORG-01 и составить drill report.
+    pass_criteria:
+      - Восстановление выполнено из seed вне failure domain, с human authority и увеличением epoch.
+      - Решение о continuity identity зафиксировано.
+    evidence: [catastrophic recovery drill report]
+    scenarios: [FS-ORG-01]
+    isolated_environment: true
+  - id: TC-ADPT-01-01
+    requirement: REQ-ADPT-01
+    method: schema
+    title: Границы learning
+    procedure:
+      - Проверить genome `adaptation.learning_bounds`.
+      - Выполнить обучение, выходящее за границы или затрагивающее genome, invariants, authority model или audit semantics.
+    pass_criteria:
+      - Out-of-bound learning отклонено.
+      - Изменение genome возможно только через change machine с class=evolution.
+    evidence: [genome `adaptation.learning_bounds`, тест отклонения]
+  - id: TC-ADPT-02-01
+    requirement: REQ-ADPT-02
+    method: test
+    title: Governed change protocol
+    procedure:
+      - Провести через change machine одно изменение до promotion и одно до rollback по результату canary.
+    pass_criteria:
+      - Оба изменения проходят состояния машины change с canary; отклонённое откатывается.
+    evidence: [логи change protocol: один promoted и один rolled-back]
+    isolated_environment: true
+  - id: TC-ADPT-03-01
+    requirement: REQ-ADPT-03
+    method: schema
+    title: Разделение proposer, evaluator и approver
+    procedure:
+      - Проверить genome `adaptation.separation_of_duties` и записи одобрений.
+    pass_criteria:
+      - Proposer, evaluator и approver изменения — различные authorities.
+    evidence: [genome `adaptation.separation_of_duties`, approval records]
+  - id: TC-ADPT-04-01
+    requirement: REQ-ADPT-04
+    method: inspection
+    title: Governance evaluation sets
+    procedure:
+      - Проверить реестр evaluation sets и политику доступа.
+    pass_criteria:
+      - Наборы версионированы, имеют provenance и недоступны proposer'у.
+    evidence: [реестр evaluation sets, access policy]
+  - id: TC-ADPT-05-01
+    requirement: REQ-ADPT-05
+    method: test
+    title: Drift и reward hacking
+    procedure:
+      - Внести поведенческий дрейф относительно baseline.
+      - Предъявить кандидата, улучшающего прокси-метрику при нарушении safety constraint.
+    pass_criteria:
+      - Дрейф измерен относительно baseline.
+      - Кандидат с нарушением safety constraint не проходит promotion (hard gate).
+    evidence: [drift-injection test, scorecard с safety gates]
+    isolated_environment: true
+  - id: TC-ADPT-06-01
+    requirement: REQ-ADPT-06
+    method: schema
+    title: Lineage вариантов
+    procedure:
+      - Проверить LineageManifest каждого promoted варианта по lineage-manifest.schema.json.
+    pass_criteria:
+      - Манифест связывает parent genome, артефакты и намеренные различия.
+    evidence: [LineageManifest записи]
+  - id: TC-ADPT-07-01
+    requirement: REQ-ADPT-07
+    method: test
+    title: Измеряемые learned defenses
+    procedure:
+      - Измерить precision, recall и blast radius learned правила на отложенном наборе.
+      - Проверить decay или retirement индикатора.
+    pass_criteria:
+      - Метрики измерены и находятся в заявленных порогах.
+      - Индикатор затухает или выводится из использования.
+    evidence: [rule validation report, indicator-decay test]
+  - id: TC-EMB-01-01
+    requirement: REQ-EMB-01
+    method: schema
+    title: Hazard analysis и safe state
+    procedure:
+      - Составить hazard analysis по templates/DOA_HAZARD_ANALYSIS.md.
+      - Проверить, что genome `embodiment` ссылается на hazard analysis и определение safe state.
+    pass_criteria:
+      - Hazard analysis существует и утверждён; physical safe state определён.
+      - Ссылки в genome разрешаются.
+    evidence: [hazard analysis, определение safe state, genome `embodiment`]
+  - id: TC-EMB-02-01
+    requirement: REQ-EMB-02
+    method: test
+    title: Независимые interlock, watchdog и E-stop
+    procedure:
+      - Отключить LLM, planner и сетевой control plane; вызвать E-stop и сработку watchdog.
+    pass_criteria:
+      - E-stop и hard limits срабатывают без LLM, planner и сети.
+    evidence: [тесты E-stop и watchdog]
+    isolated_environment: true
+  - id: TC-EMB-03-01
+    requirement: REQ-EMB-03
+    method: test
+    title: Real-time budget
+    procedure:
+      - Измерить или рассчитать worst-case время отклика safety paths.
+    pass_criteria:
+      - Worst-case время не превышает заявленный бюджет; метод и среда измерения указаны.
+    evidence: [timing analysis или отчёт измерений]
+    isolated_environment: true
+  - id: TC-EMB-04-01
+    requirement: REQ-EMB-04
+    method: test
+    title: Калиброванное sensing и uncertainty
+    procedure:
+      - Внести расхождение показаний сенсоров и устаревшую калибровку.
+    pass_criteria:
+      - Наблюдения содержат версию калибровки, неопределённость и freshness.
+      - Расхождение сенсоров даёт состояние UNCERTAIN.
+    evidence: [тесты калибровки и fault-injection]
+    isolated_environment: true
+  - id: TC-EMB-05-01
+    requirement: REQ-EMB-05
+    method: test
+    title: Actuator envelope и устаревшие команды
+    procedure:
+      - Подать команды вне envelope, с истёкшим deadline, без preconditions и повторно (replay).
+    pass_criteria:
+      - Команды вне envelope, просроченные и воспроизведённые отклонены.
+    evidence: [stale/replayed command rejection test]
+    isolated_environment: true
+  - id: TC-EMB-06-01
+    requirement: REQ-EMB-06
+    method: test
+    title: Reset authority
+    procedure:
+      - Попытаться выйти из LOCKED_OUT без инспекции и без квалифицированного человека; затем выполнить процедуру reset.
+    pass_criteria:
+      - Выход без инспекции и авторизованного reset невозможен; процедура reset документирована и выполнима.
+    evidence: [reset-authority test, процедура reset]
+    isolated_environment: true
+  - id: TC-COND-01-01
+    requirement: REQ-COND-01
+    method: test
+    title: Контроль reproduction
+    procedure:
+      - Проверить genome `ecology.reproduction`.
+      - Если reproduction запрещён — попытаться его выполнить; если разрешён — проверить plan-gating, независимую identity и lineage.
+    pass_criteria:
+      - Запрет принудительно выполняется, либо reproduction plan-gated с независимыми identity и lineage.
+    evidence: [genome `ecology`, тест принудительного запрета или controls]
+    isolated_environment: true
+  - id: TC-COND-02-01
+    requirement: REQ-COND-02
+    method: test
+    title: Federation и treaties
+    procedure:
+      - Проверить `ecology.federation`.
+      - Если federation разрешена — проверить treaty (identity, quotas, data-use policy, expiry) и выполнить revocation.
+    pass_criteria:
+      - Федерация отсутствует (`none`) и это принудительно, либо treaty полон и revocation работает.
+    evidence: [treaty records, revocation test]
+    isolated_environment: true
+  - id: TC-COND-03-01
+    requirement: REQ-COND-03
+    method: test
+    title: Изоляция horizontal transfer
+    procedure:
+      - Попытаться импортировать артефакт из другой lineage без provenance и без прохождения quarantine.
+    pass_criteria:
+      - Импорт запрещён, либо проходит provenance, compatibility и quarantine gates.
+    evidence: [import-gate test]
+    isolated_environment: true
