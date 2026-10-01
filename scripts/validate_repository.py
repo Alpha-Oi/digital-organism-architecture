@@ -29,7 +29,7 @@ SCHEMA_NAMES = {
 }
 
 REQUIRED_FILES = {
-    ".gitattributes", ".gitignore", ".github/CODEOWNERS", ".github/pull_request_template.md",
+    ".gitattributes", ".gitignore", ".github/CODEOWNERS", ".github/dependabot.yml", ".github/pull_request_template.md",
     ".github/ISSUE_TEMPLATE/standard-gap.yml", ".github/workflows/validate.yml",
     "CHANGELOG.md", "CHANGES_AND_NEW_FINDINGS.md", "CONTRIBUTING.md", "GOVERNANCE.md", "LICENSE", "README.md",
     "ROADMAP.md", "SECURITY.md", "VERSION",
