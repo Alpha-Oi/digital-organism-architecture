@@ -1,6 +1,6 @@
 # Digital Organism Architecture (DOA)
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 
 **Standard identifier:** `DOA-FS-1.0`
 
@@ -41,6 +41,7 @@ DOA не является приложением, agent framework, control plane
 - `docs/LIFECYCLE.md` — state machines, старение, завершение;
 - `docs/FAILURE_AND_RECOVERY.md` — таксономия восстановления, классы отказов, runaway growth;
 - `docs/CONFORMANCE.md` — требования, evidence, статусы claim;
+- `docs/IMPLEMENTATION_GUIDE.md` — как применять стандарт к control plane, навыкам для LLM и системам на стадии проектирования (informative);
 - `docs/BIOLOGY_TO_IT_MAPPING.md` — каноническая матрица механизмов;
 - `docs/SECURITY_AND_IMMUNITY.md` — доверие, иммунитет, карантин и apoptosis;
 - `docs/HOMEOSTASIS.md` — измеримые контрольные циклы;

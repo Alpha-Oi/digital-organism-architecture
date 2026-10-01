@@ -46,3 +46,11 @@
 ## Reassessment rule
 
 Любое normative изменение после этой оценки требует новой версии и повторного полного прогона validation.
+
+## Patch-релиз v1.0.1
+
+`v1.0.1` содержит только clarifications: новый informative документ `docs/IMPLEMENTATION_GUIDE.md` и ссылки на него; нормативные тексты, схемы и скрипты проверки не менялись, кроме добавления файла в список обязательных. Критерии выше проверяются тем же `scripts/validate_repository.py`.
+
+Внешние условия выпуска те же: успешный запуск workflow `Validate DOA standard` на release commit, tag `v1.0.1` на этом commit и GitHub Release из него. Tag создаёт владелец репозитория.
+
+Уточнение к разделу Accepted risks: строка про major tags GitHub Actions относилась к `v1.0.0`; с PR #1 actions закреплены на commit SHA, и валидатор это проверяет.

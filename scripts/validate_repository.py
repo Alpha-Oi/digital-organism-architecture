@@ -35,6 +35,7 @@ REQUIRED_FILES = {
     "ROADMAP.md", "SECURITY.md", "VERSION",
     "docs/ARCHITECTURE.md", "docs/BIOLOGY_TO_IT_MAPPING.md", "docs/BOUNDARY_AND_IDENTITY.md", "docs/CONFORMANCE.md",
     "docs/DOA_STANDARD_v1.0.md", "docs/FAILURE_AND_RECOVERY.md", "docs/GENOME_AND_EVOLUTION.md", "docs/HOMEOSTASIS.md",
+    "docs/IMPLEMENTATION_GUIDE.md",
     "docs/LIFECYCLE.md", "docs/MEMORY_AND_NERVOUS_SYSTEM.md", "docs/METABOLISM.md", "docs/PRINCIPLES.md",
     "docs/RELEASE_READINESS_v1.0.md", "docs/ROBOTICS_EXTENSION.md", "docs/SECURITY_AND_IMMUNITY.md", "docs/SOURCES.md",
     "docs/TERMINOLOGY.md",

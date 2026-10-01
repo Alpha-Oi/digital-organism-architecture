@@ -17,6 +17,7 @@
 | `docs/ROBOTICS_EXTENSION.md` | Normative для Embodied Profile; Optional extension для остальных | не обязателен, если Embodied не заявлен |
 | `docs/CONFORMANCE.md`, `templates/DOA_CONFORMANCE_CLAIM.md` | Normative (процесс claim) | правила статусов и evidence |
 | `docs/PRINCIPLES.md` | Informative | обоснование; требования выражены в нормативных документах |
+| `docs/IMPLEMENTATION_GUIDE.md` | Informative | руководство по применению; не вводит требований, при противоречии действует нормативный документ |
 | `docs/SOURCES.md`, `CHANGES_AND_NEW_FINDINGS.md`, `ROADMAP.md`, `CHANGELOG.md` | Informative | история, источники, планы |
 | `reference/*` (architecture, stack, example genome, examples) | Non-normative implementation examples | не обязательны; примеры MUST оставаться валидными по схемам |
 | `diagrams/*` | Informative, производные | рёбра state-диаграмм MUST совпадать с `state-machines.yaml` |
