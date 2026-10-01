@@ -444,6 +444,10 @@ def validate_workflow(errors: list[str]) -> None:
     workflow = yaml.safe_load(text_of(".github/workflows/validate.yml"))
     if workflow.get("permissions") != {"contents": "read"}:
         fail(errors, "workflow permissions must be exactly contents: read")
+    for step in workflow["jobs"]["validate"]["steps"]:
+        action = step.get("uses")
+        if action and not re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", action):
+            fail(errors, f"workflow action must be pinned to a full commit SHA: {action}")
     steps = " ".join(str(s.get("run", "")) for s in workflow["jobs"]["validate"]["steps"])
     if "scripts/validate_repository.py" not in steps:
         fail(errors, "workflow must run scripts/validate_repository.py")
