@@ -1,0 +1,49 @@
+standard: DOA-FS-1.0
+implementation: reference-control-plane (illustrative, design stage)
+owner: ai-platform
+version: design review 2026-10-01
+assessment_date: '2026-10-01'
+status: PARTIAL
+assurance: self-assessed
+profiles:
+- Core
+scope:
+  boundary: control plane only; managed agents are declared external dependencies (symbiont)
+  environments:
+  - design review
+  exclusions:
+  - no end-to-end run; mechanisms are described in design documents
+requirements:
+- id: REQ-CORE-01
+  status: PASS
+  component: action ledger
+  evidence_ref: evidence://action-ledger-replay-2026-10-01
+- id: REQ-CORE-02
+  status: DESIGNED
+  component: boundary table in the design document
+  gap_owner: ai-platform
+- id: REQ-CORE-18
+  status: PARTIAL
+  component: budget service (reserved accounting only)
+  gap_owner: ai-platform
+- id: REQ-CORE-23
+  status: DESIGNED
+  component: failure-class table in the design document
+  gap_owner: ai-platform
+failure_classes:
+- id: F-01
+  status: PASS
+  component: lease controller
+  evidence_ref: evidence://lease-expiry-test-2026-10-01
+- id: F-12
+  status: DESIGNED
+  component: tool circuit breaker, design only
+  gap_owner: ai-platform
+- id: F-19
+  status: EXCLUDED
+  justification: no managed agent holds credentials of this organism in this iteration
+assessor: ai-platform
+blocking_gaps:
+- REQ-CORE-02 boundary exists only as a design
+accepted_risks: []
+reassessment: '2026-12-01'

@@ -1,0 +1,179 @@
+# Machine-readable registry of DOA failure classes: source data for the table in docs/FAILURE_AND_RECOVERY.md, section 2.
+# The table and this file MUST agree; scripts/validate_repository.py checks ids, titles and every column.
+# Conformance claims MAY reference classes by id in `failure_classes` (REQ-CORE-23).
+failure_classes:
+- id: F-01
+  title: Component failure (crash клетки)
+  detection: failure detector, lease expiry, `FAILED`
+  containment: fencing, revoke grants, discovery removal
+  recovery: '`REPLACE` / `REPAIR`'
+  verification: readiness + semantic health, нет orphan grants
+  mechanisms: [C-28, C-24]
+- id: F-02
+  title: Partial failure (деградировавший орган)
+  detection: 'health evidence: correctness/freshness, SLO burn'
+  containment: graceful degradation, failover на реплику
+  recovery: '`REPAIR` / `REPLACE`'
+  verification: возврат SLO в target range stable_for
+  mechanisms: [H-05, N-03]
+- id: F-03
+  title: Network partition / split-brain
+  detection: epoch mismatch, quorum loss, divergence detector
+  containment: fencing по epoch, остановка минорити-стороны
+  recovery: reconcile после reconnect, `RESTORE` минорити
+  verification: единый epoch, отсутствие конфликтующих side effects
+  mechanisms: [H-04, N-21, N-11]
+- id: F-04
+  title: Stale state / stale memory
+  detection: freshness, validity interval, supersession age
+  containment: read-only для устаревшего, пометка `UNKNOWN`
+  recovery: refresh из источника, reconsolidation
+  verification: recomputed confidence, freshness в норме
+  mechanisms: [N-14, N-17, N-01]
+- id: F-05
+  title: Corrupted state / memory
+  detection: digest mismatch, state-chain break
+  containment: arrest компонента, quarantine записей
+  recovery: '`RESTORE` из независимого backup / `REPAIR`'
+  verification: digest match, state-chain проверена
+  mechanisms: [C-05, E-04, M-04]
+- id: F-06
+  title: Poisoning (data, model, memory, tool output)
+  detection: provenance gate, anomaly, eval regression
+  containment: quarantine источника и затронутых записей
+  recovery: purge + `RESTORE`/`ROLLBACK`
+  verification: повторная проверка на poisoning test set
+  mechanisms: [C-22, N-16, I-02, E-14]
+- id: F-07
+  title: Model failure (outage, hallucination, degradation)
+  detection: semantic health, groundedness check, provider status
+  containment: failover на другую модель, degraded mode
+  recovery: '`REPLACE` модели / `ROLLBACK`'
+  verification: eval sample passes
+  mechanisms: [N-05, E-11]
+- id: F-08
+  title: Model / behavioral drift
+  detection: drift score vs baseline
+  containment: заморозка адаптации, canary stop
+  recovery: '`ROLLBACK` / retrain через change protocol'
+  verification: drift ниже порога на governed eval set
+  mechanisms: [E-11, N-20]
+- id: F-09
+  title: Incorrect adaptation
+  detection: delta vs baseline, human override rate
+  containment: остановка canary
+  recovery: '`ROLLBACK`'
+  verification: baseline restored
+  mechanisms: [N-20, E-09]
+- id: F-10
+  title: Unsafe evolution (genome change)
+  detection: invariant/safety check в SIMULATED
+  containment: запрет promote, отзыв варианта
+  recovery: '`ROLLBACK` genome version'
+  verification: lineage и подпись предыдущей версии
+  mechanisms: [E-08, E-02]
+- id: F-11
+  title: Reward hacking
+  detection: multi-signal invariant, audit sampling, proxy-vs-outcome divergence
+  containment: safety gates как hard constraints, остановка promotion
+  recovery: пересмотр fitness, `ROLLBACK`
+  verification: safety violations = 0 на hard gates
+  mechanisms: [E-09, H-01]
+- id: F-12
+  title: Tool failure
+  detection: tool health, error/timeout rate, circuit breaker
+  containment: circuit breaker, egress seal
+  recovery: alternative tool, `REPLACE`, degrade
+  verification: tool probe passes
+  mechanisms: [E-12, C-23]
+- id: F-13
+  title: Dependency failure
+  detection: dependency status в HealthEvidence, SLO
+  containment: failover, bounded retry, degrade
+  recovery: '`RECONFIGURE` / failover'
+  verification: dependency PASS stable_for
+  mechanisms: [C-24, H-05]
+- id: F-14
+  title: Cascading failure
+  detection: correlated failures, retry storm, saturation
+  containment: bulkheads, load shedding, emergency circulation
+  recovery: поэтапное восстановление по приоритету
+  verification: рост нагрузки не вызывает вторичных отказов
+  mechanisms: [C-24, M-03, H-02, C-11]
+- id: F-15
+  title: Resource exhaustion / starvation
+  detection: saturation, budget burn, queue age
+  containment: hard quotas, preemption, spawn gate (M-14)
+  recovery: scale/shed, `RECONFIGURE`
+  verification: watermarks в норме, fair share
+  mechanisms: [C-16, M-09, E-15]
+- id: F-16
+  title: Deadlock / livelock
+  detection: no-progress watchdog, wait-for graph
+  containment: timeout, cancel, lock lease expiry
+  recovery: '`RESTART` / `REPLACE` участников'
+  verification: прогресс возобновлён
+  mechanisms: [N-03, C-28]
+- id: F-17
+  title: Synchronization failure (clock skew, ordering)
+  detection: skew metric, epoch/ordering anomalies
+  containment: отклонение событий вне окна, fencing
+  recovery: resync, `RECONFIGURE`
+  verification: skew в допуске
+  mechanisms: [N-21, N-19]
+- id: F-18
+  title: Runaway process / runaway growth
+  detection: spawn rate, generation depth, orphan count, cost burn
+  containment: freeze spawn, isolate, внешний kill
+  recovery: '`TERMINATING` расширившихся, `RESTORE` quotas'
+  verification: cell_count ≤ `max_cells`, нет orphans
+  mechanisms: [I-17, C-25, H-02]
+- id: F-19
+  title: Security compromise
+  detection: innate/adaptive detection, attestation failure
+  containment: quarantine, revoke, seal
+  recovery: incident machine → `REGENERATE`/`REBUILD`
+  verification: clean attestation, новые credentials
+  mechanisms: [I-04, I-12, C-27]
+- id: F-20
+  title: Identity spoofing
+  detection: identity verification failure, attestation mismatch
+  containment: deny, step-up auth, revoke
+  recovery: rotate credentials, `REPLACE`
+  verification: negative spoofing test
+  mechanisms: [I-03, E-03]
+- id: F-21
+  title: Privilege escalation
+  detection: grant-vs-parent diff, unexpected capability use
+  containment: revoke, isolate, freeze delegation
+  recovery: '`REPLACE` клетки, ревизия grants'
+  verification: grants ⊆ declared, attenuation соблюдена
+  mechanisms: [I-17, N-11, C-04]
+- id: F-22
+  title: Adversarial manipulation (prompt injection, sensor spoofing)
+  detection: input anomaly, cross-sensor disagreement
+  containment: BBB brokering, `UNCERTAIN` state
+  recovery: '`RESTORE` memory, recalibration'
+  verification: injection test set passes
+  mechanisms: [I-02, R-01, C-22]
+- id: F-23
+  title: Loss of provenance
+  detection: provenance_missing, lineage chain gap
+  containment: отклонение объектов без provenance
+  recovery: '`REBUILD` с attestation / re-ingest'
+  verification: chain полна
+  mechanisms: [E-01, E-02]
+- id: F-24
+  title: Catastrophic loss (организм)
+  detection: потеря control plane / trust root / region
+  containment: остановка внешних side effects
+  recovery: catastrophic recovery (`REPAIRING→PROVISIONING`)
+  verification: epoch+1, identity continuity decision, drill report
+  mechanisms: [E-06, T-05, E-04]
+- id: F-25
+  title: Deceptive or silent health
+  detection: absence of signal, independent telemetry mismatch
+  containment: трактовать как `UNKNOWN`, независимый sensor
+  recovery: restore observability, `REPLACE` sensor
+  verification: independent sensor agrees
+  mechanisms: [N-01, I-05]

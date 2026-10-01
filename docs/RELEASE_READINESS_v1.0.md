@@ -54,3 +54,11 @@
 Внешние условия выпуска те же: успешный запуск workflow `Validate DOA standard` на release commit, tag `v1.0.1` на этом commit и GitHub Release из него. Tag создаёт владелец репозитория.
 
 Уточнение к разделу Accepted risks: строка про major tags GitHub Actions относилась к `v1.0.0`; с PR #1 actions закреплены на commit SHA, и валидатор это проверяет.
+
+## Release v1.1.0
+
+`v1.1.0` — minor-релиз с additive изменениями conformance-контракта и двумя нормативными уточнениями (`REQ-CORE-18`, `REQ-CORE-22`); полный список и анализ совместимости — в `CHANGELOG.md`, раздел `[1.1.0]`. Критерии выше проверяются тем же `scripts/validate_repository.py`; для новых артефактов добавлены проверки: реестр `specifications/failure-classes.yaml` против таблицы `FAILURE_AND_RECOVERY.md`, определения статусов требования в `CONFORMANCE.md`, поведение `check_conformance_claim.py` для `DESIGNED`, `failure_classes` и предупреждений, valid/invalid примеры claim.
+
+Для review normative diff (`GOVERNANCE.md`, раздел 5) значимы: `specifications/conformance-claim.schema.json`, `specifications/requirements.yaml` (формулировки `REQ-CORE-18`, `REQ-CORE-22`, evidence `REQ-CORE-23`), `specifications/failure-classes.yaml`, `docs/CONFORMANCE.md`, `docs/FAILURE_AND_RECOVERY.md`, `docs/LIFECYCLE.md`, `docs/METABOLISM.md`.
+
+Внешние условия выпуска: успешный запуск workflow `Validate DOA standard` на release commit, tag `v1.1.0` на этом commit и GitHub Release из него. Tag создаёт владелец репозитория.

@@ -1,0 +1,24 @@
+standard: DOA-FS-1.0
+implementation: reference-control-plane (illustrative)
+owner: ai-platform
+version: design review 2026-10-01
+assessment_date: '2026-10-01'
+status: PARTIAL
+assurance: self-assessed
+profiles:
+- Core
+scope:
+  boundary: control plane only
+  environments:
+  - design review
+requirements:
+- id: REQ-CORE-01
+  status: PASS
+  component: action ledger
+  evidence_ref: evidence://action-ledger-replay-2026-10-01
+failure_classes:
+- id: component-failure
+  status: PASS
+  evidence_ref: evidence://lease-expiry-test-2026-10-01
+assessor: ai-platform
+blocking_gaps: []

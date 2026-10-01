@@ -126,9 +126,9 @@ requirements:
   - id: REQ-CORE-18
     profile: Core
     title: Resource accounting
-    statement: All work MUST be reserved and charged against a budget; resource scarcity MUST gate growth.
+    statement: Work performed or authorized by the organism MUST be reserved and charged against a budget (reserved accounting); consumption known only from external telemetry (observed accounting) MUST be recorded with its source and uncertainty and MUST NOT be reported as reserved; resource scarcity MUST gate growth.
     mappings: [C-16, M-12, M-14, M-09]
-    evidence: Accounting reconciliation report and scarcity-gating test.
+    evidence: Accounting reconciliation report that separates reserved from observed accounting and states the uncertainty of observed figures, and scarcity-gating test.
     verification: test
   - id: REQ-CORE-19
     profile: Core
@@ -154,7 +154,7 @@ requirements:
   - id: REQ-CORE-22
     profile: Core
     title: Identity continuity and anti-resurrection
-    statement: Identity MUST persist across component replacement via signed continuity records, and terminated or revoked entities MUST NOT be restorable from stale state.
+    statement: Identity MUST persist across component replacement via signed continuity records, and terminated or revoked entities MUST NOT be restorable from stale state. Continuity records and tombstones apply to identities the organism issues; identities issued by others MUST be declared as external dependencies, and the organism SHOULD record their mapping to its own identity and verify their external status on restore.
     mappings: [E-03, E-04, E-02]
     evidence: Component-replacement test and restore-after-tombstone rejection test.
     verification: test
@@ -163,7 +163,7 @@ requirements:
     title: Failure-class coverage
     statement: Each applicable class in docs/FAILURE_AND_RECOVERY.md MUST have documented detection, containment, recovery and verification, or a justified exclusion.
     mappings: [C-24, H-05, I-12]
-    evidence: Failure-class coverage table for the implementation with test references.
+    evidence: Failure-class coverage table for the implementation with test references; a claim MAY reference classes by id in `failure_classes`.
     verification: inspection
   - id: REQ-CORE-24
     profile: Core

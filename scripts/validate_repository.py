@@ -10,6 +10,7 @@ from __future__ import annotations
 import sys
 
 sys.dont_write_bytecode = True
+import copy
 import importlib.util
 import json
 import re
@@ -41,7 +42,7 @@ REQUIRED_FILES = {
     "docs/TERMINOLOGY.md",
     "reference/EXAMPLE_GENOME.yaml", "reference/REFERENCE_ARCHITECTURE.md", "reference/REFERENCE_STACK.md",
     "requirements-validation.txt", "scripts/check_conformance_claim.py", "scripts/validate_repository.py",
-    "specifications/requirements.yaml", "specifications/state-machines.yaml",
+    "specifications/failure-classes.yaml", "specifications/requirements.yaml", "specifications/state-machines.yaml",
     "templates/DOA_CONFORMANCE_CLAIM.md",
 } | {f"specifications/{name}.schema.json" for name in SCHEMA_NAMES}
 
@@ -312,6 +313,42 @@ def validate_requirements(errors: list[str], mapping: dict[str, list[str]]) -> N
             fail(errors, f"claim template lacks {rid}")
 
 
+def validate_failure_classes(errors: list[str], mapping: dict[str, list[str]]) -> None:
+    """specifications/failure-classes.yaml is the machine-readable twin of the table in FAILURE_AND_RECOVERY.md."""
+    registry = yaml.safe_load(text_of("specifications/failure-classes.yaml"))["failure_classes"]
+    ids = [item["id"] for item in registry]
+    expected = [f"F-{number:02d}" for number in range(1, len(ids) + 1)]
+    if ids != expected:
+        fail(errors, f"failure-classes.yaml ids must be {expected[0]}..{expected[-1]} without gaps or duplicates")
+    keys = ("id", "title", "detection", "containment", "recovery", "verification", "mechanisms")
+    for item in registry:
+        for key in keys:
+            if not item.get(key):
+                fail(errors, f"failure class {item.get('id')}: missing {key}")
+        for ref in item.get("mechanisms", []):
+            if ref not in mapping:
+                fail(errors, f"failure class {item['id']} references unknown mechanism {ref}")
+    doc = text_of("docs/FAILURE_AND_RECOVERY.md").split("## 2. Реестр классов отказа")[1].split("\n## 3.")[0]
+    table = {}
+    for line in doc.splitlines():
+        if re.match(r"\| F-\d{2} \|", line):
+            cells = [cell.strip() for cell in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
+            table[cells[0]] = cells
+    from_registry = {
+        item["id"]: [item["id"], item["title"], item["detection"], item["containment"], item["recovery"],
+                     item["verification"], ", ".join(item["mechanisms"])]
+        for item in registry
+    }
+    if table != from_registry:
+        differing = sorted(set(table) ^ set(from_registry) | {k for k in table.keys() & from_registry.keys() if table[k] != from_registry[k]})
+        fail(errors, f"FAILURE_AND_RECOVERY.md table differs from failure-classes.yaml: {differing}")
+    statuses = set(json.loads(text_of("specifications/conformance-claim.schema.json"))["properties"]["requirements"]["items"]["properties"]["status"]["enum"])
+    conformance = text_of("docs/CONFORMANCE.md")
+    for status in sorted(statuses):
+        if f"| `{status}` |" not in conformance:
+            fail(errors, f"docs/CONFORMANCE.md does not define requirement status {status}")
+
+
 def validate_claim_checker(errors: list[str]) -> None:
     spec = importlib.util.spec_from_file_location("check_conformance_claim", ROOT / "scripts/check_conformance_claim.py")
     module = importlib.util.module_from_spec(spec)
@@ -338,6 +375,28 @@ def validate_claim_checker(errors: list[str]) -> None:
     complete["requirements"].pop()
     if not module.check_claim(complete):
         fail(errors, "claim checker accepts a VERIFIED claim with an uncovered requirement")
+    designed = copy.deepcopy(complete)
+    designed["status"] = "PARTIAL"
+    designed["requirements"][0].update({"status": "DESIGNED", "component": "design", "gap_owner": "owner"})
+    if module.check_claim(designed):
+        fail(errors, "claim checker rejects a PARTIAL claim with a DESIGNED requirement")
+    designed["status"] = "VERIFIED"
+    if not module.check_claim(designed):
+        fail(errors, "claim checker accepts a VERIFIED claim with a DESIGNED requirement")
+    classes = copy.deepcopy(complete)
+    classes["status"] = "PARTIAL"
+    classes["failure_classes"] = [{"id": "F-99", "status": "NOT_ASSESSED"}]
+    if not any("unknown failure class" in problem for problem in module.check_claim(classes)):
+        fail(errors, "claim checker accepts an unknown failure class id")
+    classes["failure_classes"] = [{"id": "F-01", "status": "PASS", "evidence_ref": "evidence://x"}]
+    if not any("not covered" in problem for problem in module.check_claim(classes)):
+        fail(errors, "claim checker accepts REQ-CORE-23 PASS with uncovered failure classes")
+    mutable = copy.deepcopy(complete)
+    mutable["requirements"][0]["evidence_ref"] = "https://example.org/o/r/blob/main/README.md"
+    if not module.evidence_warnings(mutable):
+        fail(errors, "claim checker does not warn about a mutable evidence_ref")
+    if module.evidence_warnings(complete):
+        fail(errors, "claim checker warns about a valid evidence_ref")
 
 
 def validate_markdown(errors: list[str], mapping_ids: set[str]) -> None:
@@ -479,6 +538,7 @@ def main() -> int:
         validate_state_machines(errors, schemas, machines)
     if mapping:
         validate_requirements(errors, mapping)
+        validate_failure_classes(errors, mapping)
     try:
         validate_claim_checker(errors)
     except Exception as exc:  # aggregate

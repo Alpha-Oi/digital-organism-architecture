@@ -32,7 +32,7 @@
 
 ## Requirement mapping
 
-Статусы: `PASS | PARTIAL | FAIL | EXCLUDED | NOT_ASSESSED`. `PASS` требует `evidence_ref`; `EXCLUDED` требует justification.
+Статусы: `PASS | PARTIAL | FAIL | EXCLUDED | NOT_ASSESSED | DESIGNED`. `PASS` требует `evidence_ref`; `EXCLUDED` требует justification; `DESIGNED` (механизм описан, но не реализован или не имеет воспроизводимого evidence) требует component и gap owner и не допускается в claim `VERIFIED`.
 
 | Requirement | Profile | Implementation component | Evidence | Status | Gap/owner |
 |---|---|---|---|---|---|
@@ -85,6 +85,14 @@
 | REQ-COND-01 Reproduction control | Conditional | | | NOT_ASSESSED | |
 | REQ-COND-02 Federation and treaties | Conditional | | | NOT_ASSESSED | |
 | REQ-COND-03 Horizontal transfer isolation | Conditional | | | NOT_ASSESSED | |
+
+## Failure classes (необязательно)
+
+Классы из `specifications/failure-classes.yaml` (`F-01`…`F-25`) можно оценить по отдельности в поле `failure_classes`. Если `REQ-CORE-23` имеет статус `PASS`, каждый класс MUST быть `PASS` или `EXCLUDED` с justification.
+
+| Class | Implementation component | Evidence | Status | Gap/owner |
+|---|---|---|---|---|
+| F-01 | | | NOT_ASSESSED | |
 
 ## Evidence pack
 
