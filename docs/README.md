@@ -8,6 +8,7 @@
 |---|---|
 | Понять идею за 30 минут | [PRINCIPLES.md](PRINCIPLES.md), [DOA_STANDARD_v1.0.md](DOA_STANDARD_v1.0.md) разделы 1–6, [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Применить стандарт к своей системе | [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md), [BOUNDARY_AND_IDENTITY.md](BOUNDARY_AND_IDENTITY.md), [CONFORMANCE.md](CONFORMANCE.md), [шаблон claim](../templates/DOA_CONFORMANCE_CLAIM.md) |
+| Понять, как устроены биологические механизмы и как они связаны | [mechanisms/README.md](../mechanisms/README.md), [граф связей](../mechanisms/interaction-graph.yaml), затем [BIOLOGY_TO_IT_MAPPING.md](BIOLOGY_TO_IT_MAPPING.md) |
 | Выбрать архитектуру внедрения | [profiles/README.md](../profiles/README.md), [модульный монолит](../profiles/modular-monolith.md), затем [CONFORMANCE.md](CONFORMANCE.md) |
 | Проверить реализацию | [VERIFICATION_KIT.md](VERIFICATION_KIT.md), [FAILURE_AND_RECOVERY.md](FAILURE_AND_RECOVERY.md), [CONFORMANCE.md](CONFORMANCE.md) раздел 4 |
 | Оценить безопасность | [SECURITY_AND_IMMUNITY.md](SECURITY_AND_IMMUNITY.md), [BOUNDARY_AND_IDENTITY.md](BOUNDARY_AND_IDENTITY.md), [шаблон threat model](../templates/DOA_THREAT_MODEL.md) |

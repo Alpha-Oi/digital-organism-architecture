@@ -120,6 +120,7 @@ specifications/  схемы контрактов, машины состояни�
 reference/       эталонный геном, эталонная архитектура, примеры valid и invalid
 verification/    тестовый план, сценарии отказа, конвенции OpenTelemetry doa.*
 profiles/        профили внедрения: как выполнить требования в конкретной архитектуре
+mechanisms/      карточки биологических механизмов, граф связей между механизмами и принципы (пилот)
 templates/       шаблоны claim, threat model и hazard analysis
 diagrams/        диаграммы Mermaid, производные от машин состояний
 scripts/         проверка стандарта, claim и отчётов
@@ -134,6 +135,7 @@ scripts/         проверка стандарта, claim и отчётов
 - [`docs/FAILURE_AND_RECOVERY.md`](docs/FAILURE_AND_RECOVERY.md) — таксономия восстановления и классы отказа;
 - [`docs/IMPLEMENTATION_GUIDE.md`](docs/IMPLEMENTATION_GUIDE.md) — руководство по применению (informative);
 - [`docs/VERIFICATION_KIT.md`](docs/VERIFICATION_KIT.md) — как получать и показывать evidence (informative);
+- [`mechanisms/README.md`](mechanisms/README.md) — как устроены биологические механизмы и как они связаны между собой (informative, пилот);
 - [`profiles/README.md`](profiles/README.md) — профили внедрения; [модульный монолит](profiles/modular-monolith.md) и [Kubernetes с потоками событий](profiles/kubernetes-event-streaming.md) (informative);
 - [`docs/TERMINOLOGY.md`](docs/TERMINOLOGY.md) — нормативный язык, статус документов, глоссарий.
 

@@ -50,6 +50,9 @@ REQUIRED_FILES = {
     "templates/DOA_CONFORMANCE_CLAIM.md", "templates/DOA_HAZARD_ANALYSIS.md", "templates/DOA_THREAT_MODEL.md",
     "profiles/README.md", "profiles/modular-monolith.md", "profiles/modular-monolith.yaml",
     "profiles/kubernetes-event-streaming.md", "profiles/kubernetes-event-streaming.yaml",
+    "mechanisms/README.md", "mechanisms/interaction-graph.yaml", "mechanisms/principles.yaml",
+    "mechanisms/cards/atp-synthase.md", "mechanisms/cards/dna-polymerase-proofreading.md",
+    "mechanisms/cards/proteostasis-chaperones-proteasome.md", "scripts/analyze_interaction_graph.py",
     "verification/conformance-test-plan.yaml", "verification/fault-scenarios.yaml",
     "verification/otel-semantic-conventions.yaml",
 } | {f"specifications/{name}.schema.json" for name in SCHEMA_NAMES}
@@ -865,6 +868,94 @@ def validate_profiles(errors: list[str]) -> None:
             fail(errors, f"profiles/README.md must list the profile {name}")
 
 
+CARD_SECTIONS = (
+    "## Что это и зачем", "## Как устроена", "## Как работает (по шагам)", "## Регуляция", "## Как ломается и цена",
+    "## Инженерный принцип (вывод автора)", "## Где аналогия кончается", "## Связь с DOA", "## Источники", "## Ограничения карточки",
+)
+EDGE_TYPES = {"supplies", "triggers", "regulates", "inhibits", "constrains", "protects", "repairs", "observes", "amplifies"}
+EDGE_BASIS = re.compile(r"(REQ-(?:CORE|DIST|ADPT|EMB|COND)-\d{2})|(F-\d{2})|(PMID:\d+)|([\w./-]+\.md)")
+
+
+def validate_mechanisms(errors: list[str], mapping: dict[str, list[str]]) -> None:
+    """Mechanism cards, principles and the interaction graph (informative pilot) against the normative registries."""
+    requirements = {item["id"] for item in yaml.safe_load(text_of("specifications/requirements.yaml"))["requirements"]}
+    failure_ids = {item["id"] for item in yaml.safe_load(text_of("specifications/failure-classes.yaml"))["failure_classes"]}
+    graph = yaml.safe_load(text_of("mechanisms/interaction-graph.yaml"))
+    node_ids = [node["id"] for node in graph["nodes"]]
+    if sorted(node_ids) != sorted(mapping) or len(node_ids) != len(set(node_ids)):
+        fail(errors, f"interaction graph nodes must equal the {len(mapping)} mechanisms of the registry: differs by {sorted(set(node_ids) ^ set(mapping))}")
+    if set(graph["edge_types"]) != EDGE_TYPES:
+        fail(errors, "interaction graph edge_types differ from the expected set")
+    cards = sorted((ROOT / "mechanisms/cards").glob("*.md"))
+    card_text = {path.stem: path.read_text(encoding="utf-8") for path in cards}
+    cited_pmids = {pmid for body in card_text.values() for pmid in re.findall(r"PMID (\d+)", body)}
+    seen = set()
+    for edge in graph["edges"]:
+        label = f"{edge.get('from')}->{edge.get('to')} ({edge.get('type')})"
+        if edge.get("from") not in mapping or edge.get("to") not in mapping:
+            fail(errors, f"interaction edge {label}: unknown mechanism")
+            continue
+        if edge["from"] == edge["to"]:
+            fail(errors, f"interaction edge {label}: self loop")
+        if edge.get("type") not in EDGE_TYPES:
+            fail(errors, f"interaction edge {label}: bad type")
+        key = (edge["from"], edge["to"], edge.get("type"))
+        if key in seen:
+            fail(errors, f"duplicate interaction edge {label}")
+        seen.add(key)
+        if not edge.get("basis"):
+            fail(errors, f"interaction edge {label}: missing basis")
+        for basis in edge.get("basis", []):
+            match = EDGE_BASIS.fullmatch(str(basis))
+            if not match:
+                fail(errors, f"interaction edge {label}: unrecognized basis {basis}")
+            elif match.group(1) and basis not in requirements:
+                fail(errors, f"interaction edge {label}: unknown requirement {basis}")
+            elif match.group(2) and basis not in failure_ids:
+                fail(errors, f"interaction edge {label}: unknown failure class {basis}")
+            elif match.group(3) and basis.split(":")[1] not in cited_pmids:
+                fail(errors, f"interaction edge {label}: {basis} is not cited in any mechanism card")
+            elif match.group(4) and not (ROOT / basis).is_file():
+                fail(errors, f"interaction edge {label}: basis file does not exist {basis}")
+    spec = importlib.util.spec_from_file_location("analyze_interaction_graph", ROOT / "scripts/analyze_interaction_graph.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for loop in module.analyze(graph)["loops"]:
+        if not loop["guarded"]:
+            fail(errors, f"positive-feedback loop without H-02 guard in the interaction graph: {' -> '.join(loop['nodes'])}")
+
+    for name, body in card_text.items():
+        for section in CARD_SECTIONS:
+            if section not in body:
+                fail(errors, f"mechanism card {name} lacks section {section}")
+        if body.count("pubmed.ncbi.nlm.nih.gov/") < 1 or "Based on articles retrieved from PubMed" not in body:
+            fail(errors, f"mechanism card {name} must cite PubMed articles with links")
+        if "Проверка биологом не проводилась" not in body:
+            fail(errors, f"mechanism card {name} must state the review status")
+    principles = yaml.safe_load(text_of("mechanisms/principles.yaml"))["principles"]
+    principle_ids = [item["id"] for item in principles]
+    if len(principle_ids) != len(set(principle_ids)):
+        fail(errors, "duplicate principle ids")
+    for item in principles:
+        if not re.fullmatch(r"P-\d{2}", item["id"]) or item.get("status") != "candidate":
+            fail(errors, f"principle {item.get('id')}: bad id or status")
+        for key in ("title", "summary", "candidate_tests"):
+            if not item.get(key):
+                fail(errors, f"principle {item['id']}: missing {key}")
+        for card in item.get("cards", []):
+            if card not in card_text:
+                fail(errors, f"principle {item['id']} references unknown card {card}")
+        for ref in item.get("doa_mechanisms", []):
+            if ref not in mapping:
+                fail(errors, f"principle {item['id']} references unknown mechanism {ref}")
+        if not item.get("cards"):
+            fail(errors, f"principle {item['id']} has no source card")
+    readme = text_of("mechanisms/README.md")
+    for name in card_text:
+        if f"cards/{name}.md" not in readme:
+            fail(errors, f"mechanisms/README.md must list the card {name}")
+
+
 def validate_workflow(errors: list[str]) -> None:
     workflow = yaml.safe_load(text_of(".github/workflows/validate.yml"))
     if workflow.get("permissions") != {"contents": "read"}:
@@ -916,6 +1007,8 @@ def main() -> int:
     validate_workflow(errors)
     validate_community_files(errors)
     validate_profiles(errors)
+    if mapping:
+        validate_mechanisms(errors, mapping)
     validate_canonical_terms(errors)
 
     if errors:
@@ -936,6 +1029,7 @@ def main() -> int:
     print(f"- Mermaid documents: {len(DIAGRAM_MACHINES) + len(OTHER_DIAGRAMS)}")
     print("- community files: citation, issue forms and README links valid")
     print("- implementation profiles: requirements covered, test cases and tables consistent")
+    print("- mechanisms: cards, principles and interaction graph consistent")
     print(f"- version: {text_of('VERSION').strip()}")
     return 0
 
