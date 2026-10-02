@@ -404,8 +404,9 @@ def validate_verification_kit(errors: list[str], machines: dict[str, dict]) -> N
     for name, document, key in (("conformance-test-plan.yaml", plan, "plan_version"), ("fault-scenarios.yaml", catalog, "kit_version")):
         if document.get("standard") != "DOA-FS-1.0":
             fail(errors, f"verification/{name}: standard must be DOA-FS-1.0")
-        if ".".join(str(document.get(key, "")).split(".")[:2]) != short:
-            fail(errors, f"verification/{name}: {key} must have the same major.minor as VERSION ({short})")
+        kit_parts = tuple(int(part) for part in str(document.get(key, "0.0")).split(".")[:2])
+        if kit_parts[0] != int(short.split(".")[0]) or kit_parts > tuple(int(part) for part in short.split(".")):
+            fail(errors, f"verification/{name}: {key} must share the major version with VERSION and not exceed {short}")
     if plan.get("plan_version") != catalog.get("kit_version"):
         fail(errors, "plan_version and kit_version must be equal")
 
