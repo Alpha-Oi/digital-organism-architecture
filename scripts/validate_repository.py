@@ -856,6 +856,11 @@ def validate_profiles(errors: list[str]) -> None:
         for section in PROFILE_SECTIONS:
             if section not in document:
                 fail(errors, f"profiles/{name}.md lacks section {section}")
+        for line in document.splitlines():
+            if line.startswith("| Ткань |") and "модул" in line:
+                fail(errors, f"profiles/{name}.md: tissue is a group of cells, a module is not a cell (docs/TERMINOLOGY.md)")
+            if line.startswith("| Орган |") and not all(word in line for word in ("SLO", "владельц")):
+                fail(errors, f"profiles/{name}.md: organ must be described with SLO and owner (docs/TERMINOLOGY.md)")
         if f"{name}.md" not in index:
             fail(errors, f"profiles/README.md must list the profile {name}")
 

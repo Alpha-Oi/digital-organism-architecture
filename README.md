@@ -36,7 +36,7 @@ Digital Organism Architecture (DOA) — метаархитектурный ст�
 | Клетка | минимальная изолируемая единица исполнения; агент — клетка | [`LIFECYCLE.md`](docs/LIFECYCLE.md) |
 | Гомеостаз | замкнутые контуры регулирования с порогами, эскалацией и ручным отключением | [`HOMEOSTASIS.md`](docs/HOMEOSTASIS.md) |
 | Иммунитет | обнаружение, карантин без согласия нарушителя, обновление защит | [`SECURITY_AND_IMMUNITY.md`](docs/SECURITY_AND_IMMUNITY.md) |
-| Регенерация | восстановление из доверенного источника, а не копирование повреждённого состояния | [`FAILURE_AND_RECOVERY.md`](docs/FAILURE_AND_RECOVERY.md) |
+| Регенерация | воссоздание утраченного компонента из доверенного seed, а не копирование повреждённого состояния | [`FAILURE_AND_RECOVERY.md`](docs/FAILURE_AND_RECOVERY.md) |
 | Апоптоз | ограниченное по времени и шагам завершение без остаточных прав | [`LIFECYCLE.md`](docs/LIFECYCLE.md) |
 
 ## Для кого

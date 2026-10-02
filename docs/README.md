@@ -19,7 +19,7 @@
 | Документ | Статус | О чём |
 |---|---|---|
 | [DOA_STANDARD_v1.0.md](DOA_STANDARD_v1.0.md) | Normative | конституционные инварианты, сущности, профили |
-| [TERMINOLOGY.md](TERMINOLOGY.md) | Normative | нормативный язык, статус документов, глоссарий |
+| [TERMINOLOGY.md](TERMINOLOGY.md) | не перечислен в таблице статусов | нормативный язык, статус документов, глоссарий |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Normative | слои, planes, архитектурные цепочки |
 | [BOUNDARY_AND_IDENTITY.md](BOUNDARY_AND_IDENTITY.md) | Normative | граница организма, идентичность, доверие |
 | [LIFECYCLE.md](LIFECYCLE.md) | Normative | машины состояний, старение, завершение |
@@ -36,6 +36,6 @@
 | [VERIFICATION_KIT.md](VERIFICATION_KIT.md) | Informative | тесты, сценарии отказа, конвенции, шаблоны |
 | [PRINCIPLES.md](PRINCIPLES.md) | Informative | обоснование принципов |
 | [SOURCES.md](SOURCES.md) | Informative | источники |
-| [RELEASE_READINESS_v1.0.md](RELEASE_READINESS_v1.0.md) | Informative | критерии и результат оценки релизов |
+| [RELEASE_READINESS_v1.0.md](RELEASE_READINESS_v1.0.md) | не перечислен в таблице статусов | критерии и результат оценки релизов; требований к реализациям не накладывает |
 
 Машиночитаемые источники истины лежат в [`specifications/`](../specifications/): схемы контрактов, [`state-machines.yaml`](../specifications/state-machines.yaml), [`requirements.yaml`](../specifications/requirements.yaml), [`failure-classes.yaml`](../specifications/failure-classes.yaml). Диаграммы — в [`diagrams/`](../diagrams/).
