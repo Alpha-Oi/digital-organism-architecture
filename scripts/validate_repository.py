@@ -886,6 +886,14 @@ def validate_mechanisms(errors: list[str], mapping: dict[str, list[str]]) -> Non
         fail(errors, f"interaction graph nodes must equal the {len(mapping)} mechanisms of the registry: differs by {sorted(set(node_ids) ^ set(mapping))}")
     if set(graph["edge_types"]) != EDGE_TYPES:
         fail(errors, "interaction graph edge_types differ from the expected set")
+    roles = set(graph.get("resource_roles", {}))
+    if roles != {"work", "storage", "passive", "anti-pattern"}:
+        fail(errors, "interaction graph resource_roles must be work, storage, passive, anti-pattern")
+    for node in graph["nodes"]:
+        if node.get("resource_role") not in roles:
+            fail(errors, f"interaction graph node {node['id']}: resource_role missing or unknown")
+        if node.get("resource_role") == "anti-pattern" and mapping.get(node["id"], [""] * 12)[11] != "Anti-pattern":
+            fail(errors, f"interaction graph node {node['id']}: resource_role anti-pattern requires the Anti-pattern profile")
     cards = sorted((ROOT / "mechanisms/cards").glob("*.md"))
     card_text = {path.stem: path.read_text(encoding="utf-8") for path in cards}
     cited_pmids = {pmid for body in card_text.values() for pmid in re.findall(r"PMID (\d+)", body)}
@@ -903,6 +911,10 @@ def validate_mechanisms(errors: list[str], mapping: dict[str, list[str]]) -> Non
         if key in seen:
             fail(errors, f"duplicate interaction edge {label}")
         seen.add(key)
+        if edge.get("status", "established") not in {"established", "hypothesis"}:
+            fail(errors, f"interaction edge {label}: bad status")
+        if edge.get("status") == "hypothesis" and not edge.get("note"):
+            fail(errors, f"interaction edge {label}: a hypothesis needs a note")
         if not edge.get("basis"):
             fail(errors, f"interaction edge {label}: missing basis")
         for basis in edge.get("basis", []):

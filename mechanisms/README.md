@@ -12,9 +12,9 @@
 |---|---|---|
 | Карточки | [`cards/`](cards/) | как устроен и работает биологический механизм, как ломается, какой инженерный принцип из него следует; со ссылками на статьи |
 | Принципы | [`principles.yaml`](principles.yaml) | инженерные выводы из карточек и идеи проверок (кандидаты, не требования) |
-| Граф связей | [`interaction-graph.yaml`](interaction-graph.yaml) | кто кого питает, запускает, тормозит, защищает и ограничивает; у каждой связи указано основание |
+| Граф связей | [`interaction-graph.yaml`](interaction-graph.yaml) | кто кого питает, запускает, тормозит, защищает и ограничивает; у каждой связи указано основание; у каждого механизма указана роль в учёте ресурсов |
 
-Первые карточки: [ATP-синтаза](cards/atp-synthase.md), [ДНК-полимераза с корректурой](cards/dna-polymerase-proofreading.md), [контроль качества белков](cards/proteostasis-chaperones-proteasome.md).
+Карточки: [ATP-синтаза](cards/atp-synthase.md), [ДНК-полимераза с корректурой](cards/dna-polymerase-proofreading.md), [контроль качества белков](cards/proteostasis-chaperones-proteasome.md), [запас АТФ и способ гибели клетки](cards/atp-and-cell-death-mode.md).
 
 ## Что в карточку попадает
 
