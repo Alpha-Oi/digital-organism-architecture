@@ -1,0 +1,44 @@
+name: Application report
+description: Рассказать, как вы применили DOA, что получилось и что нет
+title: "[Application]: "
+labels:
+  - application-report
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Отчёты о применении помогают найти пробелы стандарта. Для версии 2.0 нужны как минимум две независимые реализации. Не публикуйте закрытые материалы и данные клиентов.
+  - type: input
+    id: system
+    attributes:
+      label: Система
+      description: Название и краткое описание. Можно в общих чертах.
+    validations:
+      required: true
+  - type: dropdown
+    id: profiles
+    attributes:
+      label: Какие профили вы применяли
+      multiple: true
+      options:
+        - Core
+        - Distributed
+        - Adaptive
+        - Embodied
+        - Conditional
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Что получилось
+      description: Какие требования вы смогли показать с evidence. Ссылка на claim приветствуется.
+    validations:
+      required: true
+  - type: textarea
+    id: gaps
+    attributes:
+      label: Что не получилось или оказалось неясным
+      description: Требования, формулировки и кейсы, которые вы не смогли применить, и почему.
+    validations:
+      required: true

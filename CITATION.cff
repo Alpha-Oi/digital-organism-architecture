@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: Если вы ссылаетесь на этот стандарт, пожалуйста, процитируйте его так.
+title: Digital Organism Architecture (DOA)
+abstract: >-
+  Метаархитектурный стандарт для проектирования ИИ-систем как управляемых,
+  наблюдаемых и восстанавливаемых цифровых организмов: требования, схемы
+  контрактов, машины состояний, процесс заявки о соответствии и набор для
+  проверки.
+authors:
+  - name: Digital Organism Architecture contributors
+version: 1.2.0
+date-released: 2026-10-02
+license: Apache-2.0
+repository-code: https://github.com/Alpha-Oi/digital-organism-architecture
+url: https://github.com/Alpha-Oi/digital-organism-architecture
+keywords:
+  - architecture
+  - ai-systems
+  - standard
+  - conformance
+  - resilience
+  - observability
