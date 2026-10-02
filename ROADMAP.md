@@ -30,6 +30,10 @@
 - modular-monolith profile, см. `profiles/modular-monolith.md`;
 - Kubernetes/event-streaming profile, см. `profiles/kubernetes-event-streaming.md`.
 
+## 1.4 — Механизмы (выпущен)
+
+В релиз вошёл раздел `mechanisms/`: двенадцать карточек биологических механизмов, граф связей и принципы-кандидаты. Раздел informative и остаётся пилотом: граф неполный, биолог карточки не проверял.
+
 ## Следующие профили (запланированы)
 
 - edge/robotics profile: потребует review специалиста по физической безопасности;

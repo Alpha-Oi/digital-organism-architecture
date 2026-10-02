@@ -12,13 +12,13 @@
 
 </div>
 
-**Version:** 1.3.1
+**Version:** 1.4.0
 
 **Standard identifier:** `DOA-FS-1.0`
 
 **Status:** Foundational Standard (released)
 
-**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.3.1: исправлены описания понятий в профилях и диаграммах; v1.3.0: профили внедрения — модульный монолит и Kubernetes с потоками событий)
+**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.4.0: раздел «механизмы» — карточки биологических механизмов, граф связей и принципы; v1.3.1: исправлены описания понятий в профилях и диаграммах; v1.3.0: профили внедрения — модульный монолит и Kubernetes с потоками событий)
 
 **Date:** 2026-10-02
 
