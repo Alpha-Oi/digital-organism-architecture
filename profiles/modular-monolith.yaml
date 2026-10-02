@@ -136,7 +136,7 @@ requirements:
   - id: REQ-CORE-20
     applicability: applicable-with-limits
     approach: >-
-      Каждый орган (модуль) объявляет допустимые режимы восстановления. Для монолита типичны RESTART, RECONFIGURE, ROLLBACK и RESTORE; REGENERATE и REBUILD выполняются сборкой из genome и подписанных источников.
+      Каждый орган (модуль с SLO и владельцем) объявляет допустимые режимы восстановления. Для монолита типичны RESTART, RECONFIGURE, ROLLBACK и RESTORE; REGENERATE и REBUILD выполняются сборкой из genome и подписанных источников.
     limit: >-
       REPLACE модуля внутри процесса означает замену всего процесса.
     evidence_cases: [TC-CORE-20-01]

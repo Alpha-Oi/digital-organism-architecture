@@ -85,7 +85,7 @@ requirements:
   - TC-CORE-13-01
 - id: REQ-CORE-14
   applicability: applicable-with-limits
-  approach: 'Incident machine реализует контроллер immune. Quarantine выполняется без кооперации субъекта: сетевая изоляция pod политикой или меткой, отзыв токенов, cordon, evict или удаление pod, снимок evidence перед завершением.'
+  approach: 'Incident machine реализует контроллер immune. Quarantine выполняется без кооперации субъекта: сетевая изоляция pod политикой или меткой, отзыв токенов, evict или удаление pod (при необходимости cordon узла, чтобы на нём не запускались новые pods), снимок evidence перед завершением.'
   limit: Отзыв токена не обрывает уже установленные соединения, если службы не проверяют его заново. Сетевая изоляция зависит от сетевого плагина (CNI).
   evidence_cases:
   - TC-CORE-14-01
