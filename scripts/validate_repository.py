@@ -49,6 +49,7 @@ REQUIRED_FILES = {
     "specifications/failure-classes.yaml", "specifications/requirements.yaml", "specifications/state-machines.yaml",
     "templates/DOA_CONFORMANCE_CLAIM.md", "templates/DOA_HAZARD_ANALYSIS.md", "templates/DOA_THREAT_MODEL.md",
     "profiles/README.md", "profiles/modular-monolith.md", "profiles/modular-monolith.yaml",
+    "profiles/kubernetes-event-streaming.md", "profiles/kubernetes-event-streaming.yaml",
     "verification/conformance-test-plan.yaml", "verification/fault-scenarios.yaml",
     "verification/otel-semantic-conventions.yaml",
 } | {f"specifications/{name}.schema.json" for name in SCHEMA_NAMES}
@@ -805,50 +806,57 @@ def validate_community_files(errors: list[str]) -> None:
 
 
 PROFILE_APPLICABILITY = {"applicable": "да", "applicable-with-limits": "да, с пределом"}
+PROFILES_COVERAGE = {
+    "modular-monolith": {"Core", "Conditional"},
+    "kubernetes-event-streaming": {"Core", "Distributed", "Conditional"},
+}
 PROFILE_SECTIONS = (
-    "## Простыми словами", "## Когда выбирать и когда нет", "## Как DOA выглядит в монолите", "## Главный риск: общая судьба",
-    "## Термины профиля", "## Что можно заявить", "## Требования по пунктам", "## Как проверять", "## Порядок внедрения", "## Ограничения профиля",
+    "## Простыми словами", "## Термины профиля", "## Когда выбирать и когда нет", "## Как DOA выглядит в ",
+    "## Главный риск", "## Что можно заявить", "## Состав приложения", "## Требования по пунктам", "## Как проверять",
+    "## Порядок внедрения", "## Ограничения профиля",
 )
 
 
 def validate_profiles(errors: list[str]) -> None:
-    """Implementation profiles (informative): coverage of requirements, test-plan references and the mirrored table."""
+    """Implementation profiles (informative): coverage of requirements, test-plan references and the mirrored tables."""
     requirements = {item["id"]: item for item in yaml.safe_load(text_of("specifications/requirements.yaml"))["requirements"]}
     cases = {case["id"]: case for case in yaml.safe_load(text_of("verification/conformance-test-plan.yaml"))["cases"]}
-    profile = yaml.safe_load(text_of("profiles/modular-monolith.yaml"))
-    if profile.get("standard") != "DOA-FS-1.0" or profile.get("status") != "informative":
-        fail(errors, "profiles/modular-monolith.yaml: standard must be DOA-FS-1.0 and status informative")
-    expected = [rid for rid, item in requirements.items() if item["profile"] in {"Core", "Conditional"}]
-    listed = [item["id"] for item in profile["requirements"]]
-    if sorted(listed) != sorted(expected) or len(listed) != len(set(listed)):
-        fail(errors, f"profile requirements must cover Core and Conditional exactly once: differs by {sorted(set(listed) ^ set(expected))}")
-    rows = []
-    for item in profile["requirements"]:
-        rid = item["id"]
-        if item.get("applicability") not in PROFILE_APPLICABILITY:
-            fail(errors, f"profile {rid}: bad applicability {item.get('applicability')}")
-            continue
-        if not item.get("approach"):
-            fail(errors, f"profile {rid}: missing approach")
-        if item["applicability"] == "applicable-with-limits" and not item.get("limit"):
-            fail(errors, f"profile {rid}: applicable-with-limits needs a limit")
-        if not item.get("evidence_cases"):
-            fail(errors, f"profile {rid}: missing evidence_cases")
-        for case_id in item.get("evidence_cases", []):
-            if case_id not in cases or cases[case_id]["requirement"] != rid:
-                fail(errors, f"profile {rid}: evidence case {case_id} is unknown or belongs to another requirement")
-        if rid in requirements:
-            rows.append(f"| `{rid}` {requirements[rid]['title']} | {PROFILE_APPLICABILITY[item['applicability']]} | {item['approach']} | "
-                        f"{item.get('limit') or '—'} | {', '.join(item.get('evidence_cases', []))} |")
-    document = text_of("profiles/modular-monolith.md")
-    for row in rows:
-        if row not in document:
-            fail(errors, f"profiles/modular-monolith.md table differs from the registry: {row[:60]}")
-    for section in PROFILE_SECTIONS:
-        if section not in document:
-            fail(errors, f"profiles/modular-monolith.md lacks section {section}")
-    if "modular-monolith.md" not in text_of("profiles/README.md"):
-        fail(errors, "profiles/README.md must list the modular monolith profile")
+    index = text_of("profiles/README.md")
+    for name, covered_profiles in PROFILES_COVERAGE.items():
+        profile = yaml.safe_load(text_of(f"profiles/{name}.yaml"))
+        if profile.get("standard") != "DOA-FS-1.0" or profile.get("status") != "informative" or profile.get("profile") != name:
+            fail(errors, f"profiles/{name}.yaml: standard must be DOA-FS-1.0, status informative, profile {name}")
+        expected = [rid for rid, item in requirements.items() if item["profile"] in covered_profiles]
+        listed = [item["id"] for item in profile["requirements"]]
+        if sorted(listed) != sorted(expected) or len(listed) != len(set(listed)):
+            fail(errors, f"profile {name} must cover {sorted(covered_profiles)} exactly once: differs by {sorted(set(listed) ^ set(expected))}")
+        rows = []
+        for item in profile["requirements"]:
+            rid = item["id"]
+            if item.get("applicability") not in PROFILE_APPLICABILITY:
+                fail(errors, f"profile {name} {rid}: bad applicability {item.get('applicability')}")
+                continue
+            if not item.get("approach"):
+                fail(errors, f"profile {name} {rid}: missing approach")
+            if item["applicability"] == "applicable-with-limits" and not item.get("limit"):
+                fail(errors, f"profile {name} {rid}: applicable-with-limits needs a limit")
+            if not item.get("evidence_cases"):
+                fail(errors, f"profile {name} {rid}: missing evidence_cases")
+            for case_id in item.get("evidence_cases", []):
+                if case_id not in cases or cases[case_id]["requirement"] != rid:
+                    fail(errors, f"profile {name} {rid}: evidence case {case_id} is unknown or belongs to another requirement")
+            if rid in requirements:
+                rows.append(f"| `{rid}` {requirements[rid]['title']} | {PROFILE_APPLICABILITY[item['applicability']]} | {item['approach']} | "
+                            f"{item.get('limit') or '—'} | {', '.join(item.get('evidence_cases', []))} |")
+        document = text_of(f"profiles/{name}.md")
+        for row in rows:
+            if row not in document:
+                fail(errors, f"profiles/{name}.md table differs from the registry: {row[:60]}")
+        for section in PROFILE_SECTIONS:
+            if section not in document:
+                fail(errors, f"profiles/{name}.md lacks section {section}")
+        if f"{name}.md" not in index:
+            fail(errors, f"profiles/README.md must list the profile {name}")
 
 
 def validate_workflow(errors: list[str]) -> None:

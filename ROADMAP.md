@@ -26,7 +26,7 @@
 ## 1.3 — Implementation Profiles (в работе)
 
 - modular-monolith profile — готов, см. `profiles/modular-monolith.md`;
-- Kubernetes/event-streaming profile;
+- Kubernetes/event-streaming profile — готов, см. `profiles/kubernetes-event-streaming.md`;
 - edge/robotics profile;
 - air-gapped and high-assurance profile.
 
