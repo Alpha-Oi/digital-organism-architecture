@@ -4,7 +4,7 @@
 
 ## [1.2.0] - 2026-10-01
 
-Minor-релиз: Verification Kit. Все добавления additive и informative; требований, идентификаторов `REQ-*`, state machines и существующих схем нет. Идентификатор стандарта остаётся `DOA-FS-1.0`.
+Minor-релиз: Verification Kit (additive, informative) и исправление двух нормативных формулировок из 1.1.0 по результатам review (см. Changed и Fixed). Новых требований, изменений идентификаторов `REQ-*` и state machines нет. Идентификатор стандарта остаётся `DOA-FS-1.0`.
 
 ### Added
 
@@ -15,15 +15,27 @@ Minor-релиз: Verification Kit. Все добавления additive и info
 - `specifications/verification-report.schema.json` и `scripts/check_verification_report.py`: формат отчёта о прогоне и его проверка по плану и, с `--claim`, по conformance claim (противоречия отмечаются ошибкой, неполное покрытие — предупреждением). В схеме нет окружения production.
 - `templates/DOA_THREAT_MODEL.md` и `templates/DOA_HAZARD_ANALYSIS.md`: шаблоны для evidence пакета (`REQ-CORE-14`, `REQ-CORE-23`, `REQ-CORE-24`, `REQ-EMB-01`…`REQ-EMB-06`).
 - Примеры отчёта: valid `verification-report--reference.yaml`; invalid `verification-report--pass-without-evidence.yaml`, `verification-report--production-environment.yaml`.
+- Необязательное поле claim `observed_accounting` (источник и неопределённость потребления, известного только из внешней телеметрии; `REQ-CORE-18`), шаблонный раздел, valid пример и invalid пример `conformance-claim--observed-accounting-without-uncertainty.yaml`.
 - Проверки в `scripts/validate_repository.py`: покрытие требований кейсами, согласованность метода кейса с `verification` требования, ссылки сценариев на классы отказа и требования, полнота и двусторонняя согласованность покрытия классов отказа, правила именования и ссылки реестра `doa.*`, поведение проверки отчёта на искусственных нарушениях.
 
-### Changed
+### Changed (нормативно)
 
+Review формулировок 1.1.0 нашёл ослабление защиты и неточное утверждение о совместимости. Правки требуют review maintainer по `GOVERNANCE.md`, раздел 4.
+
+- `REQ-CORE-22`: чужие credentials и сессии, найденные в восстановленном состоянии, MUST считаться непроверенными и MUST NOT использоваться, пока внешний статус не подтверждён. В 1.1.0 для чужих identities оставалась только необязательная проверка (SHOULD), и старая копия могла вернуть отозванный чужой доступ. Объявление чужих identities внешними зависимостями и их сопоставление со своей identity — SHOULD (в 1.1.0 объявление было MUST). Evidence расширено restore-тестом с чужими credentials. Описание — `docs/LIFECYCLE.md`, раздел 9; `docs/BOUNDARY_AND_IDENTITY.md`, раздел 8.
+- `REQ-CORE-18`: запись observed accounting с источником и неопределённостью — SHOULD (в 1.1.0 было MUST). Запрет выдавать observed за reserved (MUST NOT) сохранён. Evidence: источник и неопределённость требуются, если observed-данные есть. Описание — `docs/METABOLISM.md`, раздел 1.
 - `docs/TERMINOLOGY.md`, `docs/CONFORMANCE.md`, `README.md`, `ROADMAP.md`: ссылки и статус документов kit.
+
+### Fixed
+
+- Запись `[1.1.0]` утверждала, что ужесточений для существующих реализаций нет. Это было неточно: формулировки 1.1.0 содержали два новых MUST (объявление чужих identities внешними зависимостями в `REQ-CORE-22`, запись observed accounting в `REQ-CORE-18`), что по `GOVERNANCE.md` относится к ужесточению для профиля Core. Запись `[1.1.0]` как исторический документ не изменена; в 1.2.0 оба MUST заменены на SHOULD.
+- `docs/METABOLISM.md` ссылался на поле claim для неопределённости observed accounting, которого не было; поле добавлено (`observed_accounting`).
 
 ### Compatibility
 
 - Claim по `1.0.x` и `1.1.x` остаются действительными. Использование kit необязательно, схема `verification-report` на claim не влияет.
+- Относительно 1.0.x обязательные правила не добавлены: для `REQ-CORE-22` запрет использовать непроверенные чужие credentials следует из запрета восстановления отозванного из устаревшего состояния; для `REQ-CORE-18` добавлен только запрет выдавать observed за reserved. Это суждение reviewer'а, а не независимая проверка.
+- Claim с полем `observed_accounting` не проходит схему `1.1.x` и ранее (необязательное поле добавлено, `additionalProperties: false`).
 
 ### Основание и ограничения
 

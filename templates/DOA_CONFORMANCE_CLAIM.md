@@ -94,6 +94,14 @@
 |---|---|---|---|---|
 | F-01 | | | NOT_ASSESSED | |
 
+## Observed accounting (необязательно)
+
+Потребление, известное только из внешней телеметрии (`REQ-CORE-18`), записывается в поле `observed_accounting` с источником и неопределённостью. Его нельзя выдавать за reserved accounting.
+
+| Source | Uncertainty | Evidence |
+|---|---|---|
+| | | |
+
 ## Evidence pack
 
 - Genome and effective overlays:

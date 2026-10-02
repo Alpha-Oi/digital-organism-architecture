@@ -346,7 +346,13 @@ def validate_failure_classes(errors: list[str], mapping: dict[str, list[str]]) -
     if table != from_registry:
         differing = sorted(set(table) ^ set(from_registry) | {k for k in table.keys() & from_registry.keys() if table[k] != from_registry[k]})
         fail(errors, f"FAILURE_AND_RECOVERY.md table differs from failure-classes.yaml: {differing}")
-    statuses = set(json.loads(text_of("specifications/conformance-claim.schema.json"))["properties"]["requirements"]["items"]["properties"]["status"]["enum"])
+    claim_schema = json.loads(text_of("specifications/conformance-claim.schema.json"))
+    if "observed_accounting" not in claim_schema["properties"]:
+        fail(errors, "conformance-claim.schema.json lacks observed_accounting (REQ-CORE-18)")
+    for relative in ("docs/CONFORMANCE.md", "docs/METABOLISM.md", "templates/DOA_CONFORMANCE_CLAIM.md"):
+        if "observed_accounting" not in text_of(relative):
+            fail(errors, f"{relative} must mention the claim field observed_accounting")
+    statuses = set(claim_schema["properties"]["requirements"]["items"]["properties"]["status"]["enum"])
     conformance = text_of("docs/CONFORMANCE.md")
     for status in sorted(statuses):
         if f"| `{status}` |" not in conformance:

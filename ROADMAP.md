@@ -16,6 +16,8 @@
 
 ## 1.2 — Verification Kit (выпущен)
 
+В релиз вошло исправление формулировок `REQ-CORE-18` и `REQ-CORE-22` из 1.1.0 по результатам review.
+
 - executable conformance test plan;
 - chaos/fault scenarios для cell, organ и circulation failures;
 - reference OpenTelemetry semantic conventions `doa.*`;

@@ -102,4 +102,4 @@ Identity организма **не** совпадает с identity ни одн�
 
 ## 8. Нормативные требования
 
-Реализация MUST: (a) объявить boundary в genome (`boundary`); (b) иметь инвентарь ingress/egress; (c) классифицировать каждую внешнюю зависимость; (d) подтвердить identity continuity тестом замены компонента; (e) отклонять restore после tombstone. Evidence — `REQ-CORE-01`, `REQ-CORE-02`, `REQ-CORE-22`, `REQ-CORE-25` (см. `CONFORMANCE.md`).
+Реализация MUST: (a) объявить boundary в genome (`boundary`); (b) иметь инвентарь ingress/egress; (c) классифицировать каждую внешнюю зависимость; (d) подтвердить identity continuity тестом замены компонента; (e) отклонять restore после tombstone и считать непроверенными чужие credentials из восстановленного состояния, пока их внешний статус не подтверждён. Evidence — `REQ-CORE-01`, `REQ-CORE-02`, `REQ-CORE-22`, `REQ-CORE-25` (см. `CONFORMANCE.md`).

@@ -6,7 +6,7 @@
 
 **Status:** Foundational Standard (released)
 
-**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.2.0: Verification Kit — тестовый план, сценарии отказа, конвенции OpenTelemetry `doa.*`, шаблоны threat model и hazard analysis)
+**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.2.0: Verification Kit — тестовый план, сценарии отказа, конвенции OpenTelemetry `doa.*`, шаблоны threat model и hazard analysis; исправлены формулировки `REQ-CORE-18` и `REQ-CORE-22`)
 
 **Date:** 2026-10-01
 

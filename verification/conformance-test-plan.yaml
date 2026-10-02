@@ -219,7 +219,7 @@ cases:
       - Выполнить FS-ORGAN-10.
       - Сверить reserved accounting с observed accounting из внешней телеметрии.
     pass_criteria:
-      - Отчёт разделяет reserved и observed, для observed указаны источник и неопределённость.
+      - Отчёт разделяет reserved и observed; если observed есть, указаны источник и неопределённость (поле claim `observed_accounting`).
       - Дефицит ресурса останавливает рост (scarcity gate).
     evidence: [accounting reconciliation report, scarcity-gating test]
     scenarios: [FS-ORGAN-10]
@@ -268,11 +268,12 @@ cases:
     procedure:
       - Заменить компонент и проверить continuity record.
       - Попытаться восстановить завершённую или отозванную сущность из устаревшего состояния (FS-CELL-04).
-      - Для identities других сторон проверить объявление внешней зависимости и сопоставление.
+      - Для identities и credentials других сторон: проверить объявление внешней зависимости и сопоставление; восстановить состояние с отозванным чужим credential.
     pass_criteria:
       - Identity сохраняется через подписанную continuity record.
-      - Восстановление после tombstone отклонено; внешние identities объявлены как внешние зависимости.
-    evidence: [component-replacement test, restore-after-tombstone rejection test]
+      - Восстановление после tombstone отклонено.
+      - Чужие credentials и сессии из восстановленного состояния не используются, пока внешний статус не подтверждён.
+    evidence: [component-replacement test, restore-after-tombstone rejection test, restore-тест с чужими credentials]
     scenarios: [FS-CELL-04]
     isolated_environment: true
   - id: TC-CORE-23-01
