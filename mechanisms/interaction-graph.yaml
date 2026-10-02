@@ -1,0 +1,1187 @@
+# DOA Mechanism interaction graph (informative, версия 0.1, пилот).
+# Узлы — 119 механизмов docs/BIOLOGY_TO_IT_MAPPING.md. Рёбра — связи между ними с типом и основанием (basis):
+#   REQ-*/F-* — реестры требований и классов отказа; путь к документу — текст стандарта; PMID:* — статья в PubMed (подробности в mechanisms/cards).
+# Граф неполный: он показывает, какие связи уже описаны в проекте. Отсутствие связи не означает отсутствие зависимости.
+# Проверяет scripts/validate_repository.py; разбор — scripts/analyze_interaction_graph.py.
+standard: DOA-FS-1.0
+status: informative
+graph_version: '0.2'
+source: docs/BIOLOGY_TO_IT_MAPPING.md
+edge_types:
+  supplies: A поставляет B ресурс, данные или сигнал
+  triggers: состояние или событие A запускает B
+  regulates: A меняет режим или уставку B
+  inhibits: A тормозит или блокирует B
+  constrains: A задаёт границы допустимого для B
+  protects: A защищает B
+  repairs: A восстанавливает B
+  observes: A наблюдает за B
+  amplifies: A усиливает B (положительная обратная связь)
+nodes:
+- id: C-01
+  name: Atoms/molecules
+  resource_role: passive
+- id: C-02
+  name: DNA / genome
+  resource_role: work
+- id: C-03
+  name: RNA / transcript
+  resource_role: work
+- id: C-04
+  name: Epigenetics
+  resource_role: work
+- id: C-05
+  name: DNA repair
+  resource_role: work
+- id: C-06
+  name: Nucleus
+  resource_role: work
+- id: C-07
+  name: Nuclear pores
+  resource_role: work
+- id: C-08
+  name: Nucleolus
+  resource_role: work
+- id: C-09
+  name: Ribosome
+  resource_role: work
+- id: C-10
+  name: Endoplasmic reticulum
+  resource_role: work
+- id: C-11
+  name: Unfolded-protein response (proteostasis)
+  resource_role: work
+- id: C-12
+  name: Golgi
+  resource_role: work
+- id: C-13
+  name: Vesicles
+  resource_role: work
+- id: C-14
+  name: Cytoskeleton
+  resource_role: work
+- id: C-15
+  name: Motor proteins
+  resource_role: work
+- id: C-16
+  name: Mitochondria
+  resource_role: work
+- id: C-17
+  name: Peroxisomes
+  resource_role: work
+- id: C-18
+  name: Lysosomes
+  resource_role: work
+- id: C-19
+  name: Autophagy
+  resource_role: work
+- id: C-20
+  name: Membrane
+  resource_role: work
+- id: C-21
+  name: Receptors
+  resource_role: work
+- id: C-22
+  name: Endocytosis
+  resource_role: work
+- id: C-23
+  name: Exocytosis
+  resource_role: work
+- id: C-24
+  name: Compartmentalization
+  resource_role: work
+- id: C-25
+  name: Cell cycle
+  resource_role: work
+- id: C-26
+  name: Checkpoints
+  resource_role: work
+- id: C-27
+  name: Apoptosis
+  resource_role: work
+- id: C-28
+  name: Necrosis
+  resource_role: work
+- id: C-29
+  name: Cellular stress response
+  resource_role: work
+- id: C-30
+  name: Senescence
+  resource_role: work
+- id: T-01
+  name: Gap junctions
+  resource_role: work
+- id: T-02
+  name: Paracrine signals
+  resource_role: work
+- id: T-03
+  name: Tissue specialization
+  resource_role: work
+- id: T-04
+  name: Differentiation
+  resource_role: work
+- id: T-05
+  name: Stem-cell niche
+  resource_role: storage
+- id: T-06
+  name: Morphogenesis
+  resource_role: work
+- id: T-07
+  name: Extracellular matrix
+  resource_role: storage
+- id: T-08
+  name: Cell adhesion
+  resource_role: storage
+- id: T-09
+  name: Polarity
+  resource_role: passive
+- id: T-10
+  name: Development / ontogeny
+  resource_role: work
+- id: N-01
+  name: Sensory receptor (sensory hierarchy)
+  resource_role: work
+- id: N-02
+  name: Proprioception
+  resource_role: work
+- id: N-03
+  name: Nociception
+  resource_role: work
+- id: N-04
+  name: Thalamus (routing, attention/salience)
+  resource_role: work
+- id: N-05
+  name: Cortex
+  resource_role: work
+- id: N-06
+  name: Basal ganglia
+  resource_role: work
+- id: N-07
+  name: Motor hierarchy (actuation)
+  resource_role: work
+- id: N-08
+  name: Cerebellum
+  resource_role: storage
+- id: N-09
+  name: Spinal reflex
+  resource_role: work
+- id: N-10
+  name: Autonomic nerves
+  resource_role: work
+- id: N-11
+  name: Peripheral ganglia (central vs peripheral control, distributed cognition)
+  resource_role: work
+- id: N-12
+  name: Working memory
+  resource_role: storage
+- id: N-13
+  name: Episodic memory
+  resource_role: storage
+- id: N-14
+  name: Semantic memory
+  resource_role: storage
+- id: N-15
+  name: Procedural memory
+  resource_role: storage
+- id: N-16
+  name: Memory consolidation (hippocampus)
+  resource_role: work
+- id: N-17
+  name: Forgetting and memory decay
+  resource_role: work
+- id: N-18
+  name: Sleep / maintenance window
+  resource_role: work
+- id: N-19
+  name: Circadian rhythm
+  resource_role: work
+- id: N-20
+  name: Neuroplasticity
+  resource_role: work
+- id: N-21
+  name: Synchronization and ordering
+  resource_role: work
+- id: M-01
+  name: Blood / circulation
+  resource_role: work
+- id: M-02
+  name: Heart
+  resource_role: work
+- id: M-03
+  name: Emergency circulation
+  resource_role: work
+- id: M-04
+  name: Lymph (quarantine path)
+  resource_role: work
+- id: M-05
+  name: Angiogenesis / vascularization
+  resource_role: work
+- id: M-06
+  name: Respiratory exchange
+  resource_role: work
+- id: M-07
+  name: Digestion
+  resource_role: work
+- id: M-08
+  name: Liver (detox)
+  resource_role: work
+- id: M-09
+  name: Kidney (filtration)
+  resource_role: work
+- id: M-10
+  name: Osmoregulation
+  resource_role: work
+- id: M-11
+  name: Acid-base / electrolytes
+  resource_role: work
+- id: M-12
+  name: ATP (resource currency)
+  resource_role: work
+- id: M-13
+  name: Fat / glycogen (reserve)
+  resource_role: work
+- id: M-14
+  name: Nutrient and oxygen sensing
+  resource_role: work
+- id: H-01
+  name: Homeostasis (negative feedback)
+  resource_role: work
+- id: H-02
+  name: Positive feedback (bounded amplification)
+  resource_role: work
+- id: H-03
+  name: Endocrine signaling (hormones)
+  resource_role: work
+- id: H-04
+  name: Quorum sensing
+  resource_role: work
+- id: H-05
+  name: Redundant organs
+  resource_role: work
+- id: I-01
+  name: Skin / mucosal barrier
+  resource_role: work
+- id: I-02
+  name: Blood-brain barrier
+  resource_role: work
+- id: I-03
+  name: Self / non-self recognition (identity markers)
+  resource_role: work
+- id: I-04
+  name: Innate immunity
+  resource_role: work
+- id: I-05
+  name: Antigen presentation
+  resource_role: work
+- id: I-06
+  name: Adaptive immunity
+  resource_role: storage
+- id: I-07
+  name: Immune memory
+  resource_role: storage
+- id: I-08
+  name: Immune tolerance
+  resource_role: storage
+- id: I-09
+  name: Complement cascade
+  resource_role: work
+- id: I-10
+  name: Inflammation
+  resource_role: work
+- id: I-11
+  name: Fever
+  resource_role: work
+- id: I-12
+  name: Coagulation
+  resource_role: work
+- id: I-13
+  name: Wound healing
+  resource_role: work
+- id: I-14
+  name: Regeneration
+  resource_role: work
+- id: I-15
+  name: Fibrosis / scarring
+  resource_role: storage
+- id: I-16
+  name: Autoimmunity
+  resource_role: anti-pattern
+- id: I-17
+  name: Oncogenesis
+  resource_role: anti-pattern
+- id: I-18
+  name: Aging
+  resource_role: work
+- id: E-01
+  name: Provenance
+  resource_role: work
+- id: E-02
+  name: Heredity / lineage
+  resource_role: storage
+- id: E-03
+  name: Identity continuity
+  resource_role: work
+- id: E-04
+  name: State continuity and anti-resurrection
+  resource_role: storage
+- id: E-05
+  name: Organism termination (death)
+  resource_role: work
+- id: E-06
+  name: Organism-scale regeneration (catastrophic recovery)
+  resource_role: work
+- id: E-07
+  name: Reproduction
+  resource_role: work
+- id: E-08
+  name: Mutation
+  resource_role: work
+- id: E-09
+  name: Natural selection / evolutionary pressure
+  resource_role: work
+- id: E-10
+  name: Genetic drift
+  resource_role: work
+- id: E-11
+  name: Model / behavioral drift
+  resource_role: work
+- id: E-12
+  name: Microbiome (host/guest boundary)
+  resource_role: storage
+- id: E-13
+  name: Symbiosis / federation
+  resource_role: work
+- id: E-14
+  name: Horizontal transfer and reproductive isolation
+  resource_role: work
+- id: E-15
+  name: Competition
+  resource_role: work
+- id: E-16
+  name: Ecosystem treaty
+  resource_role: work
+- id: R-01
+  name: Sensor fusion and calibration
+  resource_role: work
+- id: R-02
+  name: Vision / audio / tactile perception
+  resource_role: work
+- id: R-03
+  name: Motor unit (actuator envelope)
+  resource_role: work
+- id: R-04
+  name: Withdrawal reflex (safe stop)
+  resource_role: work
+- id: R-05
+  name: Body schema and spatial frame
+  resource_role: work
+edges:
+- from: C-02
+  to: C-03
+  type: supplies
+  basis:
+  - docs/GENOME_AND_EVOLUTION.md
+  - REQ-CORE-03
+- from: C-04
+  to: C-03
+  type: regulates
+  basis:
+  - REQ-CORE-04
+- from: C-03
+  to: C-09
+  type: supplies
+  basis:
+  - docs/GENOME_AND_EVOLUTION.md
+- from: C-06
+  to: C-02
+  type: protects
+  basis:
+  - REQ-CORE-06
+- from: C-07
+  to: C-06
+  type: constrains
+  basis:
+  - REQ-CORE-06
+- from: C-08
+  to: C-09
+  type: supplies
+  basis:
+  - REQ-CORE-09
+- from: C-08
+  to: E-01
+  type: supplies
+  basis:
+  - REQ-CORE-09
+- from: C-05
+  to: C-02
+  type: repairs
+  basis:
+  - REQ-CORE-20
+  - docs/FAILURE_AND_RECOVERY.md
+- from: C-05
+  to: C-08
+  type: repairs
+  basis:
+  - REQ-CORE-20
+- from: E-10
+  to: C-05
+  type: triggers
+  basis:
+  - REQ-DIST-06
+- from: E-04
+  to: C-05
+  type: supplies
+  basis:
+  - REQ-CORE-20
+  note: доверенная копия состояния — источник ремонта
+- from: T-05
+  to: C-05
+  type: supplies
+  basis:
+  - REQ-CORE-20
+- from: E-01
+  to: N-16
+  type: constrains
+  basis:
+  - REQ-CORE-09
+  - REQ-CORE-19
+- from: E-01
+  to: C-22
+  type: constrains
+  basis:
+  - REQ-CORE-09
+- from: E-02
+  to: T-05
+  type: supplies
+  basis:
+  - REQ-ADPT-06
+  - docs/GENOME_AND_EVOLUTION.md
+- from: E-03
+  to: I-14
+  type: constrains
+  basis:
+  - REQ-CORE-22
+- from: E-04
+  to: I-14
+  type: constrains
+  basis:
+  - REQ-CORE-22
+- from: C-10
+  to: C-12
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-12
+  to: C-13
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-15
+  to: C-13
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-10
+  to: C-11
+  type: triggers
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+  - PMID:32759342
+  note: перегрузка контроля качества запускает снижение нагрузки
+- from: C-11
+  to: C-09
+  type: inhibits
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+  - PMID:32759342
+- from: C-10
+  to: C-18
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+  - PMID:30670468
+- from: C-19
+  to: C-18
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-29
+  to: C-19
+  type: triggers
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-29
+  to: C-11
+  type: triggers
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-17
+  to: C-06
+  type: protects
+  basis:
+  - REQ-CORE-25
+  note: опасные преобразования изолированы от области authority
+- from: C-21
+  to: C-22
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-21
+  to: N-01
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-20
+  to: C-22
+  type: constrains
+  basis:
+  - REQ-CORE-02
+- from: C-20
+  to: C-23
+  type: constrains
+  basis:
+  - REQ-CORE-02
+- from: C-22
+  to: M-07
+  type: supplies
+  basis:
+  - docs/METABOLISM.md
+- from: N-07
+  to: C-23
+  type: supplies
+  basis:
+  - REQ-CORE-26
+- from: I-01
+  to: C-22
+  type: constrains
+  basis:
+  - REQ-CORE-02
+- from: I-02
+  to: N-05
+  type: protects
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+  - F-22
+- from: I-02
+  to: N-14
+  type: protects
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: T-07
+  to: C-21
+  type: constrains
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: T-07
+  to: M-11
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: I-03
+  to: C-20
+  type: supplies
+  basis:
+  - REQ-CORE-01
+- from: I-03
+  to: I-08
+  type: supplies
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: I-03
+  to: E-12
+  type: constrains
+  basis:
+  - REQ-CORE-25
+- from: C-25
+  to: T-04
+  type: supplies
+  basis:
+  - REQ-CORE-17
+- from: T-05
+  to: T-04
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: T-04
+  to: T-03
+  type: supplies
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-26
+  to: C-25
+  type: constrains
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: C-26
+  to: C-27
+  type: triggers
+  basis:
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: M-14
+  to: C-25
+  type: inhibits
+  basis:
+  - REQ-CORE-18
+  - docs/METABOLISM.md
+- from: C-25
+  to: I-17
+  type: inhibits
+  basis:
+  - REQ-CORE-17
+  - F-18
+- from: H-02
+  to: I-17
+  type: inhibits
+  basis:
+  - REQ-CORE-07
+  - F-18
+- from: C-29
+  to: C-27
+  type: triggers
+  basis:
+  - docs/LIFECYCLE.md
+  note: затянувшийся стресс ведёт к подозрению и изоляции, затем к завершению
+- from: C-30
+  to: C-27
+  type: triggers
+  basis:
+  - docs/LIFECYCLE.md
+- from: I-18
+  to: C-30
+  type: triggers
+  basis:
+  - REQ-CORE-21
+- from: C-30
+  to: I-14
+  type: triggers
+  basis:
+  - REQ-CORE-21
+- from: E-11
+  to: I-18
+  type: supplies
+  basis:
+  - REQ-CORE-21
+- from: C-27
+  to: E-04
+  type: supplies
+  basis:
+  - REQ-CORE-15
+  - REQ-CORE-22
+- from: E-05
+  to: E-04
+  type: supplies
+  basis:
+  - REQ-CORE-22
+- from: C-27
+  to: C-18
+  type: supplies
+  basis:
+  - docs/LIFECYCLE.md
+- from: C-28
+  to: C-27
+  type: triggers
+  basis:
+  - docs/LIFECYCLE.md
+  - F-01
+- from: C-28
+  to: I-14
+  type: triggers
+  basis:
+  - F-01
+  - docs/FAILURE_AND_RECOVERY.md
+- from: C-28
+  to: H-05
+  type: triggers
+  basis:
+  - F-01
+  - F-02
+- from: C-28
+  to: T-08
+  type: triggers
+  basis:
+  - F-01
+- from: C-24
+  to: C-28
+  type: constrains
+  basis:
+  - REQ-CORE-08
+  note: границы домена отказа ограничивают последствия сбоя клетки
+- from: I-14
+  to: C-25
+  type: triggers
+  basis:
+  - REQ-CORE-17
+- from: T-05
+  to: I-14
+  type: supplies
+  basis:
+  - REQ-CORE-20
+- from: N-03
+  to: C-29
+  type: triggers
+  basis:
+  - docs/LIFECYCLE.md
+- from: N-03
+  to: I-04
+  type: triggers
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: N-03
+  to: N-09
+  type: triggers
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: I-04
+  to: I-12
+  type: triggers
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: I-04
+  to: I-10
+  type: triggers
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: I-04
+  to: M-04
+  type: triggers
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+  - REQ-CORE-14
+- from: I-04
+  to: C-27
+  type: triggers
+  basis:
+  - REQ-CORE-14
+- from: I-04
+  to: I-11
+  type: triggers
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: I-05
+  to: I-06
+  type: supplies
+  basis:
+  - REQ-ADPT-07
+- from: I-06
+  to: I-07
+  type: supplies
+  basis:
+  - REQ-ADPT-07
+- from: I-07
+  to: I-04
+  type: supplies
+  basis:
+  - REQ-ADPT-07
+- from: I-08
+  to: I-04
+  type: inhibits
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+  - docs/BIOLOGY_TO_IT_MAPPING.md
+- from: I-10
+  to: I-13
+  type: triggers
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: I-12
+  to: I-13
+  type: triggers
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: I-10
+  to: I-09
+  type: amplifies
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+  note: воспаление и каскад усиливают друг друга
+- from: I-09
+  to: I-10
+  type: amplifies
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+- from: H-02
+  to: I-09
+  type: constrains
+  basis:
+  - REQ-CORE-07
+- from: H-02
+  to: I-10
+  type: constrains
+  basis:
+  - REQ-CORE-07
+- from: M-04
+  to: I-14
+  type: supplies
+  basis:
+  - REQ-CORE-14
+- from: M-12
+  to: C-16
+  type: supplies
+  basis:
+  - REQ-CORE-18
+  - docs/METABOLISM.md
+  note: валюта ресурсов списывается в рамках бюджета
+- from: M-06
+  to: C-16
+  type: supplies
+  basis:
+  - docs/METABOLISM.md
+- from: M-13
+  to: C-16
+  type: supplies
+  basis:
+  - docs/METABOLISM.md
+- from: M-13
+  to: M-03
+  type: supplies
+  basis:
+  - docs/METABOLISM.md
+- from: M-12
+  to: M-14
+  type: supplies
+  basis:
+  - REQ-CORE-18
+  - docs/METABOLISM.md
+- from: M-14
+  to: M-05
+  type: triggers
+  basis:
+  - docs/METABOLISM.md
+- from: M-05
+  to: M-06
+  type: supplies
+  basis:
+  - docs/METABOLISM.md
+- from: M-12
+  to: E-15
+  type: supplies
+  basis:
+  - REQ-CORE-18
+- from: E-15
+  to: C-16
+  type: constrains
+  basis:
+  - docs/METABOLISM.md
+- from: M-07
+  to: M-08
+  type: supplies
+  basis:
+  - docs/METABOLISM.md
+- from: M-07
+  to: N-04
+  type: supplies
+  basis:
+  - docs/METABOLISM.md
+- from: M-08
+  to: N-16
+  type: supplies
+  basis:
+  - docs/METABOLISM.md
+- from: M-01
+  to: T-02
+  type: supplies
+  basis:
+  - REQ-DIST-01
+- from: M-02
+  to: M-01
+  type: regulates
+  basis:
+  - REQ-DIST-02
+- from: M-03
+  to: M-01
+  type: constrains
+  basis:
+  - REQ-DIST-02
+- from: M-02
+  to: M-03
+  type: triggers
+  basis:
+  - REQ-DIST-02
+- from: N-21
+  to: M-01
+  type: constrains
+  basis:
+  - REQ-DIST-01
+  - REQ-DIST-05
+- from: N-21
+  to: H-05
+  type: supplies
+  basis:
+  - REQ-DIST-04
+- from: M-01
+  to: H-03
+  type: supplies
+  basis:
+  - docs/HOMEOSTASIS.md
+- from: C-14
+  to: H-05
+  type: supplies
+  basis:
+  - REQ-DIST-03
+- from: C-14
+  to: T-06
+  type: supplies
+  basis:
+  - REQ-DIST-03
+- from: T-06
+  to: T-10
+  type: supplies
+  basis:
+  - docs/LIFECYCLE.md
+- from: C-13
+  to: M-01
+  type: supplies
+  basis:
+  - REQ-DIST-01
+- from: N-02
+  to: H-01
+  type: supplies
+  basis:
+  - REQ-CORE-07
+- from: H-01
+  to: M-06
+  type: regulates
+  basis:
+  - REQ-CORE-07
+- from: H-01
+  to: M-10
+  type: regulates
+  basis:
+  - REQ-CORE-07
+- from: H-03
+  to: I-11
+  type: regulates
+  basis:
+  - docs/HOMEOSTASIS.md
+- from: H-03
+  to: N-19
+  type: regulates
+  basis:
+  - docs/HOMEOSTASIS.md
+- from: N-01
+  to: N-04
+  type: supplies
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: N-04
+  to: N-05
+  type: supplies
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: N-04
+  to: N-09
+  type: triggers
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: N-05
+  to: N-06
+  type: supplies
+  basis:
+  - REQ-CORE-26
+- from: N-06
+  to: N-07
+  type: supplies
+  basis:
+  - REQ-CORE-26
+- from: N-09
+  to: N-07
+  type: triggers
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: N-05
+  to: N-12
+  type: supplies
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: N-12
+  to: N-16
+  type: supplies
+  basis:
+  - REQ-CORE-19
+- from: N-13
+  to: N-16
+  type: supplies
+  basis:
+  - REQ-CORE-19
+- from: N-16
+  to: N-14
+  type: supplies
+  basis:
+  - REQ-CORE-19
+- from: N-08
+  to: N-15
+  type: supplies
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: N-20
+  to: N-08
+  type: supplies
+  basis:
+  - REQ-ADPT-02
+- from: N-17
+  to: N-14
+  type: constrains
+  basis:
+  - REQ-CORE-19
+- from: N-17
+  to: N-13
+  type: constrains
+  basis:
+  - REQ-CORE-19
+- from: N-18
+  to: N-16
+  type: triggers
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: N-19
+  to: N-18
+  type: triggers
+  basis:
+  - docs/MEMORY_AND_NERVOUS_SYSTEM.md
+- from: E-11
+  to: N-20
+  type: inhibits
+  basis:
+  - F-08
+  - REQ-ADPT-05
+- from: E-08
+  to: E-09
+  type: supplies
+  basis:
+  - REQ-ADPT-02
+- from: E-09
+  to: E-02
+  type: supplies
+  basis:
+  - REQ-ADPT-06
+- from: E-16
+  to: E-13
+  type: constrains
+  basis:
+  - REQ-COND-02
+- from: E-14
+  to: E-13
+  type: constrains
+  basis:
+  - REQ-COND-03
+- from: E-14
+  to: M-04
+  type: triggers
+  basis:
+  - REQ-COND-03
+- from: R-02
+  to: R-01
+  type: supplies
+  basis:
+  - REQ-EMB-04
+- from: R-01
+  to: N-01
+  type: supplies
+  basis:
+  - REQ-EMB-04
+- from: R-01
+  to: R-04
+  type: triggers
+  basis:
+  - REQ-EMB-04
+  note: расхождение датчиков ведёт к состоянию неопределённости и ограничению режима
+- from: R-03
+  to: R-04
+  type: triggers
+  basis:
+  - REQ-EMB-02
+- from: R-03
+  to: N-07
+  type: constrains
+  basis:
+  - REQ-EMB-05
+- from: R-04
+  to: N-07
+  type: inhibits
+  basis:
+  - REQ-EMB-02
+- from: R-05
+  to: N-07
+  type: constrains
+  basis:
+  - REQ-EMB-05
+- from: C-16
+  to: M-12
+  type: supplies
+  basis:
+  - REQ-CORE-18
+  - docs/METABOLISM.md
+  note: учёт фактического расхода возвращается в валюту (reserve→consume→account→release)
+- from: T-05
+  to: E-06
+  type: supplies
+  basis:
+  - REQ-DIST-07
+  note: seed вне домена отказа нужен для восстановления организма
+- from: E-03
+  to: E-06
+  type: constrains
+  basis:
+  - REQ-DIST-07
+  - REQ-CORE-22
+- from: E-04
+  to: E-06
+  type: constrains
+  basis:
+  - REQ-DIST-07
+  - REQ-CORE-22
+- from: E-02
+  to: E-07
+  type: supplies
+  basis:
+  - REQ-COND-01
+- from: H-04
+  to: H-05
+  type: supplies
+  basis:
+  - REQ-DIST-04
+  note: решение кворума нужно для failover
+- from: I-08
+  to: I-16
+  type: inhibits
+  basis:
+  - docs/SECURITY_AND_IMMUNITY.md
+  note: защита от блокировки валидного self
+- from: C-08
+  to: C-10
+  type: supplies
+  basis:
+  - REQ-CORE-09
+  note: собранные пакеты проходят контроль качества
+- from: M-09
+  to: M-10
+  type: regulates
+  basis:
+  - docs/METABOLISM.md
+  note: фильтрация и удержание влияют на размеры очередей и пулов
+- from: M-12
+  to: C-27
+  type: supplies
+  basis:
+  - PMID:10987825
+  status: hypothesis
+  note: 'гипотеза: корректное завершение требует бюджета; при его исчерпании остаётся аварийный путь'
+- from: M-13
+  to: C-27
+  type: supplies
+  basis:
+  - PMID:10987825
+  status: hypothesis
+  note: 'гипотеза: часть резерва должна быть закреплена за завершением'
+- from: M-14
+  to: C-28
+  type: triggers
+  basis:
+  - PMID:10987825
+  status: hypothesis
+  note: 'гипотеза: полное истощение ресурса переводит клетку к аварийному отказу'
+resource_roles:
+  work: выполняет операции, которые тратят вычисления, время, токены или ввод-вывод; по REQ-CORE-18 такая работа резервируется и списывается с бюджета
+  storage: хранит состояние и занимает ёмкость (реестры, хранилища); расход ограничивается политиками хранения
+  passive: определение или соглашение без собственного исполнения
+  anti-pattern: описывает недопустимое поведение, собственного бюджета не имеет
