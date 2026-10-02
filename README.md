@@ -12,15 +12,15 @@
 
 </div>
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 
 **Standard identifier:** `DOA-FS-1.0`
 
 **Status:** Foundational Standard (released)
 
-**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.2.0: Verification Kit — тестовый план, сценарии отказа, конвенции OpenTelemetry `doa.*`, шаблоны threat model и hazard analysis; исправлены формулировки `REQ-CORE-18` и `REQ-CORE-22`)
+**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.3.0: профили внедрения — модульный монолит и Kubernetes с потоками событий; v1.2.0: Verification Kit)
 
-**Date:** 2026-10-01
+**Date:** 2026-10-02
 
 > **In short (English).** DOA is a meta-architecture standard that describes an AI system as a *digital organism*: a signed genome (desired state), isolated cells, a lifecycle, homeostasis, an immune response, recovery and bounded termination. It gives you 49 testable requirements, 15 JSON Schemas, 5 canonical state machines, a conformance-claim process and a Verification Kit. It is a specification, not a runtime or a framework. Most documents are written in Russian with English technical terms.
 

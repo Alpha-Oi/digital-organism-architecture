@@ -70,3 +70,11 @@
 Для review normative diff (`GOVERNANCE.md`, раздел 5) значимы: `specifications/requirements.yaml` (`REQ-CORE-18`, `REQ-CORE-22`), `specifications/conformance-claim.schema.json`, `docs/CONFORMANCE.md`, `docs/LIFECYCLE.md`, `docs/METABOLISM.md`, `docs/BOUNDARY_AND_IDENTITY.md`. Для kit значимы: согласованность `verification/*` с `specifications/requirements.yaml` и `specifications/failure-classes.yaml`, правила безопасности прогона (`docs/VERIFICATION_KIT.md`, разделы 2 и 4), формулировки ограничений. Accepted risks этого релиза: независимая реализация не выполняла kit, реестр `doa.*` не проверялся инструментами OpenTelemetry, а нормативные правки 1.2.0 прошли только review ассистента и ждут решения maintainer.
 
 Внешние условия выпуска: успешный запуск workflow `Validate DOA standard` на release commit, tag `v1.2.0` на этом commit и GitHub Release из него. Tag создаёт владелец репозитория.
+
+## Release v1.3.0
+
+`v1.3.0` — minor-релиз: два профиля внедрения (`profiles/modular-monolith.*`, `profiles/kubernetes-event-streaming.*`, `profiles/README.md`) с проверками валидатора. Нормативные тексты, реестр требований и схемы не менялись; полный список и анализ совместимости — в `CHANGELOG.md`, раздел `[1.3.0]`. Критерии выше проверяются тем же `scripts/validate_repository.py`; для профилей добавлены проверки покрытия требований, ссылок на кейсы плана и совпадения таблиц с реестрами профилей.
+
+Для review значимы: раздел «Что можно заявить» и пределы платформ в каждой таблице профиля (`profiles/*.md`). Accepted risks этого релиза: профили не проверялись независимой реализацией, утверждения о Kubernetes и системах потоков не сверялись с документацией конкретных версий, а оценки достижимости профилей соответствия сделаны автором профилей.
+
+Внешние условия выпуска: успешный запуск workflow `Validate DOA standard` на release commit, tag `v1.3.0` на этом commit и GitHub Release из него. Tag создаёт владелец репозитория.
