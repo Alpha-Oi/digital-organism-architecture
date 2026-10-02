@@ -1,0 +1,216 @@
+# DOA Implementation Profile: Kubernetes and event streaming (informative, implementation-independent).
+# Источник данных для таблицы требований в profiles/kubernetes-event-streaming.md; scripts/validate_repository.py сверяет ids, applicability и тексты.
+# applicability: applicable | applicable-with-limits (профиль называет предел платформы, который нужно компенсировать или честно объявить).
+# evidence_cases ссылаются на кейсы verification/conformance-test-plan.yaml.
+standard: DOA-FS-1.0
+profile: kubernetes-event-streaming
+status: informative
+requirements:
+- id: REQ-CORE-01
+  applicability: applicable-with-limits
+  approach: 'Каждый pod получает собственную workload identity: ServiceAccount с коротко живущим токеном, привязанным к pod, или сертификат от identity authority. Вызовы между сервисами идут по mTLS. В EventEnvelope и в audit записываются субъект, компонент и digest образа.'
+  limit: 'Identity выдаётся на уровне pod: процессы внутри контейнера делят её. Несколько «агентов» внутри одного pod теряют атрибуцию до уровня pod.'
+  evidence_cases:
+  - TC-CORE-01-01
+- id: REQ-CORE-02
+  applicability: applicable-with-limits
+  approach: Весь ingress и egress идёт через шлюзы-поды. Для namespace организма включён запрет по умолчанию (default-deny NetworkPolicy), исходящий трафик допускается только через egress-шлюз. `spec.boundary` genome перечисляет все точки входа, выхода и внешние зависимости.
+  limit: NetworkPolicy работает только если сетевой плагин (CNI) её применяет; это проверяется тестом обхода. Узлы и внешние ресурсы за пределами кластера требуют собственной политики.
+  evidence_cases:
+  - TC-CORE-02-01
+- id: REQ-CORE-03
+  applicability: applicable-with-limits
+  approach: Подписанный пакет манифестов genome лежит в репозитории (GitOps). Reconciler сравнивает живое состояние кластера с genome и записывает расхождения, подпись проверяет admission-политика.
+  limit: Reconciler сам работает в кластере. Независимое подтверждение даёт внешний наблюдатель или второй контур.
+  evidence_cases:
+  - TC-CORE-03-01
+- id: REQ-CORE-04
+  applicability: applicable
+  approach: Epigenome — подписанные манифесты с ограниченным сроком, которые контроллер удаляет по TTL и которые не могут повысить права. Effective policy собирается из genome и overlays и публикуется как снимок.
+  limit: Обычный ConfigMap без срока и без подписи overlay не является.
+  evidence_cases:
+  - TC-CORE-04-01
+- id: REQ-CORE-05
+  applicability: applicable-with-limits
+  approach: Grants — коротко живущие токены или сертификаты на pod или вызов. RBAC выдаётся по минимуму, grant service проверяет подмножество родительского grant и глубину делегирования, admission отклоняет pods с лишними правами.
+  limit: 'Роли и токены кластера сами не являются CapabilityGrant: нужен слой, который проверяет подмножество и глубину. Роли с подстановочными правами (wildcard) недопустимы.'
+  evidence_cases:
+  - TC-CORE-05-01
+- id: REQ-CORE-06
+  applicability: applicable-with-limits
+  approach: Рабочие pods не имеют права записи в репозиторий genome и в объекты политик. Обновлять политики может только change service, admission отклоняет остальные попытки.
+  limit: Контроллер с правами администратора кластера может изменить что угодно. Такие операторы входят в доверенную базу и требуют отдельного аудита.
+  evidence_cases:
+  - TC-CORE-06-01
+- id: REQ-CORE-07
+  applicability: applicable-with-limits
+  approach: ControlLoopSpec описывает контуры обязательных доменов. Сенсоры — метрики из отдельного стека наблюдаемости вне pod, исполнители — автомасштабирование, admission, лимиты и throttling.
+  limit: 'Автомасштабирование может стать положительной обратной связью (нагрузка растёт, pods множатся, расход растёт): нужны потолок и TTL.'
+  evidence_cases:
+  - TC-CORE-07-01
+- id: REQ-CORE-08
+  applicability: applicable-with-limits
+  approach: 'Failure domains задаются как namespace, пул узлов и зона. Pod — клетка: requests и limits ограничивают расход ресурсов, anti-affinity разносит реплики по узлам, PodDisruptionBudget сохраняет минимум реплик при плановых остановках. Критические органы размещаются в разных зонах.'
+  limit: Pods на одном узле делят ядро и узел. Недоверенный код требует песочницы или отдельного пула узлов. Control plane кластера — общий домен для всех pods.
+  evidence_cases:
+  - TC-CORE-08-01
+- id: REQ-CORE-09
+  applicability: applicable-with-limits
+  approach: Образы подписаны, admission проверяет подпись и digest, к образам приложены SBOM и attestation. Данные и память допускаются через memory gateway с source, time, integrity и classification.
+  limit: Подпись образа не доказывает безопасность его содержимого. Provenance данных — отдельная задача.
+  evidence_cases:
+  - TC-CORE-09-01
+- id: REQ-CORE-10
+  applicability: applicable-with-limits
+  approach: Выкатка идёт по схеме canary (progressive delivery). Откат — это возврат предыдущего подписанного манифеста (revert в GitOps), он выполняется вне пути отказавшего компонента. Миграции данных идут по схеме expand и contract.
+  limit: 'Откат манифеста не откатывает данные: каждая необратимая миграция требует отдельного плана containment.'
+  evidence_cases:
+  - TC-CORE-10-01
+- id: REQ-CORE-11
+  applicability: applicable-with-limits
+  approach: Контроллер жизненного цикла записывает переходы клеток и органов в события (`EventEnvelope`) и во внешний audit. Состояния pod сопоставляются с каноническими состояниями явной таблицей.
+  limit: Состояния pod Kubernetes не совпадают с каноническими состояниями DOA. Без явного сопоставления переходы нельзя проверить.
+  evidence_cases:
+  - TC-CORE-11-01
+- id: REQ-CORE-12
+  applicability: applicable
+  approach: Изменения высокого влияния проходят через pull request с review и подписью. Доступ break-glass к кластеру временный (TTL), все действия попадают в audit.
+  evidence_cases:
+  - TC-CORE-12-01
+- id: REQ-CORE-13
+  applicability: applicable-with-limits
+  approach: Readiness и liveness probes — лишь вход. Correctness проверяют внешние синтетические проверки, отсутствие сигнала читается как `UNKNOWN`.
+  limit: Probe, выполняемый самим pod, — самоотчёт и независимым свидетельством не считается.
+  evidence_cases:
+  - TC-CORE-13-01
+- id: REQ-CORE-14
+  applicability: applicable-with-limits
+  approach: 'Incident machine реализует контроллер immune. Quarantine выполняется без кооперации субъекта: сетевая изоляция pod политикой или меткой, отзыв токенов, cordon, evict или удаление pod, снимок evidence перед завершением.'
+  limit: Отзыв токена не обрывает уже установленные соединения, если службы не проверяют его заново. Сетевая изоляция зависит от сетевого плагина (CNI).
+  evidence_cases:
+  - TC-CORE-14-01
+- id: REQ-CORE-15
+  applicability: applicable-with-limits
+  approach: 'Шаги apoptosis выполняются в preStop и в период мягкого завершения (terminationGracePeriodSeconds), а недостающее принудительно выполняет контроллер: отзыв grants, закрытие endpoints, terminal record.'
+  limit: Мягкое завершение зависит от кооперации приложения. После таймаута pod убивают, поэтому отзыв прав делает контроллер, а не pod.
+  evidence_cases:
+  - TC-CORE-15-01
+- id: REQ-CORE-16
+  applicability: applicable-with-limits
+  approach: Lease клетки — объект Lease или короткий токен. По истечении pod удаляется, grants отзываются, сетевой доступ закрывается; повторные побочные эффекты предотвращает idempotency key.
+  limit: Если control plane недоступен, pod может продолжать работать. Нужны короткие TTL токенов у внешних служб и самозавершение pod при потере lease.
+  evidence_cases:
+  - TC-CORE-16-01
+- id: REQ-CORE-17
+  applicability: applicable-with-limits
+  approach: ResourceQuota и LimitRange ограничивают namespace, admission отклоняет создание сверх `max_cells`, глубины spawn и скорости. Издатель и исполнитель grants разделены, orphans находятся по lease и ссылкам владельца.
+  limit: 'Ссылки владельца (ownerReferences) сами не запрещают создавать pods с лишними правами: нужна admission-политика.'
+  evidence_cases:
+  - TC-CORE-17-01
+- id: REQ-CORE-18
+  applicability: applicable-with-limits
+  approach: Бюджет резервируется до запуска (admission и квоты). Observed accounting (счета облака, метрики узлов) ведётся отдельно с источником и неопределённостью.
+  limit: Счета облака приходят с задержкой, поэтому их погрешность нужно записывать.
+  evidence_cases:
+  - TC-CORE-18-01
+- id: REQ-CORE-19
+  applicability: applicable
+  approach: Memory gateway — единственный путь к хранилищам памяти. Записи типизированы и содержат provenance, confidence, retention и consent; erasure охватывает реплики, индексы и резервные копии.
+  evidence_cases:
+  - TC-CORE-19-01
+- id: REQ-CORE-20
+  applicability: applicable-with-limits
+  approach: 'Органы объявляют режимы: RESTART (pod), REPLACE (pod или узел), RESTORE (снимок тома или backup), ROLLBACK (GitOps), RECONFIGURE (overlay), REBUILD (сборка из genome), REGENERATE (из seed).'
+  limit: Снимок тома в том же failure domain независимым источником восстановления не считается.
+  evidence_cases:
+  - TC-CORE-20-01
+- id: REQ-CORE-21
+  applicability: applicable
+  approach: AgingIndex учитывает конец поддержки образов, зависимостей и версий кластера, возраст сертификатов и дрейф. Состарившаяся клетка снимается с трафика и заменяется rolling update.
+  evidence_cases:
+  - TC-CORE-21-01
+- id: REQ-CORE-22
+  applicability: applicable-with-limits
+  approach: Identity authority и tombstone registry находятся вне кластера или в отдельном домене. Restore проверяет tombstone и epoch, чужие credentials из восстановленного состояния считаются непроверенными.
+  limit: 'Восстановление состояния кластера возвращает секреты и токены: их обязательно перевыпускают или отзывают.'
+  evidence_cases:
+  - TC-CORE-22-01
+- id: REQ-CORE-23
+  applicability: applicable-with-limits
+  approach: 'Таблица покрытия F-01..F-25 заполняется с учётом Kubernetes: для каждого класса указаны сценарий и кейс проверки, исключения оформляются письменно.'
+  limit: Исключение без письменного обоснования не засчитывается.
+  evidence_cases:
+  - TC-CORE-23-01
+- id: REQ-CORE-24
+  applicability: applicable-with-limits
+  approach: Audit API-сервера и audit приложения пишутся в append-only хранилище вне кластера; secret-scan выполняется по выборке записей.
+  limit: Журналы внутри кластера доступны при его компрометации и сами по себе недостаточны.
+  evidence_cases:
+  - TC-CORE-24-01
+- id: REQ-CORE-25
+  applicability: applicable-with-limits
+  approach: 'Плагины и инструменты допускаются как symbionts: отдельные pods в отдельном namespace или пуле узлов, с ограниченным ServiceAccount, NetworkPolicy и ResourceQuota; отзыв прекращает доступ.'
+  limit: Sidecar или библиотека внутри pod органа получает права этого pod и symbiont не считается.
+  evidence_cases:
+  - TC-CORE-25-01
+- id: REQ-CORE-26
+  applicability: applicable
+  approach: Модель подключается как отдельный adapter-сервис и выдаёт предложение (PlanProposal). Исполнение возможно только через grant; сама модель не имеет прав в кластере.
+  evidence_cases:
+  - TC-CORE-26-01
+- id: REQ-DIST-01
+  applicability: applicable-with-limits
+  approach: События — `EventEnvelope` в брокере; схемы проверяются реестром схем. Для каждой темы объявлены семантика доставки (как правило, at-least-once плюс idempotency key), область порядка (ключ партиции) и TTL. Потребитель проверяет схему, identity, свежесть и право доступа.
+  limit: 'Порядок гарантируется только внутри партиции. «Ровно один раз» действует внутри системы потоков: у внешнего побочного эффекта нужна собственная идемпотентность.'
+  evidence_cases:
+  - TC-DIST-01-01
+- id: REQ-DIST-02
+  applicability: applicable-with-limits
+  approach: Vital flow (identity, safety, audit, recovery) идёт по отдельным темам и очередям с собственными квотами, классами приоритета и пулами. При перегрузке работают backpressure, ограничение лага потребителей и load shedding на шлюзе.
+  limit: 'Общий брокер — общий домен отказа: vital flow выносится на отдельные темы и ресурсы.'
+  evidence_cases:
+  - TC-DIST-02-01
+- id: REQ-DIST-03
+  applicability: applicable-with-limits
+  approach: Критические органы размещаются с учётом зон (topology spread constraints, anti-affinity, PodDisruptionBudget). Контроллер сравнивает объявленную и наблюдаемую топологию и записывает дрейф размещения.
+  limit: Один кластер — один домен control plane. Независимость от отказа кластера требует нескольких кластеров; профиль это не оценивает.
+  evidence_cases:
+  - TC-DIST-03-01
+- id: REQ-DIST-04
+  applicability: applicable-with-limits
+  approach: 'Лидерство и failover опираются на membership epoch: монотонный номер, который проверяют хранилища и ресурсы (fencing token). Брокер и хранилища настраиваются на кворум. Split-brain разрешается объявленным правилом.'
+  limit: 'Объект Lease не защищает внешние ресурсы сам: проверку epoch (например, счётчика смены лидера) выполняет сторона ресурса.'
+  evidence_cases:
+  - TC-DIST-04-01
+- id: REQ-DIST-05
+  applicability: applicable-with-limits
+  approach: Источник времени (NTP или PTP), допуск skew, различие event-time и processing-time и правило для поздних событий (watermark) объявлены и проверены инъекцией смещения.
+  limit: Смещение часов узла влияет на все pods на нём, а также на сроки токенов и lease.
+  evidence_cases:
+  - TC-DIST-05-01
+- id: REQ-DIST-06
+  applicability: applicable
+  approach: GitOps-контроллер сравнивает живые реплики (digest образа, конфигурация) с подписанным genome и устраняет расхождение из доверенного источника, а не из дрейфующей реплики.
+  evidence_cases:
+  - TC-DIST-06-01
+- id: REQ-DIST-07
+  applicability: applicable-with-limits
+  approach: Seed (подписанный genome, ключи, резервные копии) хранится вне кластера, региона и учётной записи облака. Восстановление кластера из seed проходит с human authority, увеличением epoch и решением о continuity identity.
+  limit: Корень доверия (ключи подписи, центр сертификации) вне кластера — условие восстановления. Если он потерян, восстановление невозможно.
+  evidence_cases:
+  - TC-DIST-07-01
+- id: REQ-COND-01
+  applicability: applicable
+  approach: 'Reproduction запрещён (`ecology.reproduction`): рабочие pods не имеют права создавать pods, admission отклоняет попытки, запрет проверяется тестом.'
+  evidence_cases:
+  - TC-COND-01-01
+- id: REQ-COND-02
+  applicability: applicable
+  approach: 'Федерация запрещена (`ecology.federation: none`): egress-политика не допускает связи с другими кластерами и организмами.'
+  evidence_cases:
+  - TC-COND-02-01
+- id: REQ-COND-03
+  applicability: applicable
+  approach: 'Импорт из других lineages запрещён (`ecology.horizontal_transfer`): реестр образов разрешает только артефакты из доверенного списка.'
+  evidence_cases:
+  - TC-COND-03-01

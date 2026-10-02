@@ -134,7 +134,7 @@ scripts/         проверка стандарта, claim и отчётов
 - [`docs/FAILURE_AND_RECOVERY.md`](docs/FAILURE_AND_RECOVERY.md) — таксономия восстановления и классы отказа;
 - [`docs/IMPLEMENTATION_GUIDE.md`](docs/IMPLEMENTATION_GUIDE.md) — руководство по применению (informative);
 - [`docs/VERIFICATION_KIT.md`](docs/VERIFICATION_KIT.md) — как получать и показывать evidence (informative);
-- [`profiles/README.md`](profiles/README.md) — профили внедрения; первый — [модульный монолит](profiles/modular-monolith.md) (informative);
+- [`profiles/README.md`](profiles/README.md) — профили внедрения; [модульный монолит](profiles/modular-monolith.md) и [Kubernetes с потоками событий](profiles/kubernetes-event-streaming.md) (informative);
 - [`docs/TERMINOLOGY.md`](docs/TERMINOLOGY.md) — нормативный язык, статус документов, глоссарий.
 
 Полный перечень с порядком чтения — в [`docs/README.md`](docs/README.md).
