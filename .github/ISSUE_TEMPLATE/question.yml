@@ -1,0 +1,22 @@
+name: Question
+description: Задать вопрос о чтении или применении стандарта
+title: "[Question]: "
+labels:
+  - question
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Сначала загляните в [указатель документации](https://github.com/Alpha-Oi/digital-organism-architecture/blob/main/docs/README.md) и [руководство по применению](https://github.com/Alpha-Oi/digital-organism-architecture/blob/main/docs/IMPLEMENTATION_GUIDE.md). Не публикуйте закрытые материалы.
+  - type: textarea
+    id: question
+    attributes:
+      label: Вопрос
+      description: Что вы пытаетесь сделать и что именно неясно? Укажите документ или раздел.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Версия
+      description: Содержимое файла `VERSION`.

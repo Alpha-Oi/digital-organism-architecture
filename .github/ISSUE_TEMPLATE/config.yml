@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Сообщить об уязвимости
+    url: https://github.com/Alpha-Oi/digital-organism-architecture/security/advisories/new
+    about: Уязвимости и способы обойти safety controls не публикуйте в issue. Используйте приватное сообщение.
+  - name: Документация и порядок чтения
+    url: https://github.com/Alpha-Oi/digital-organism-architecture/blob/main/docs/README.md
+    about: Указатель документации с путями чтения для разных ролей.

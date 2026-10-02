@@ -1,4 +1,16 @@
+<div align="center">
+
 # Digital Organism Architecture (DOA)
+
+**Метаархитектурный стандарт для ИИ-систем, которые должны быть управляемыми, наблюдаемыми и восстанавливаемыми.**
+
+[![Validate](https://github.com/Alpha-Oi/digital-organism-architecture/actions/workflows/validate.yml/badge.svg)](https://github.com/Alpha-Oi/digital-organism-architecture/actions/workflows/validate.yml)
+[![License: Apache 2.0](https://img.shields.io/github/license/Alpha-Oi/digital-organism-architecture)](LICENSE)
+![Standard](https://img.shields.io/badge/standard-DOA--FS--1.0-2ea44f)
+
+[Начать](#с-чего-начать) · [Быстрый старт](#быстрый-старт) · [Как применить](#как-применить-стандарт) · [Состав репозитория](#состав-репозитория) · [Участие](#участие)
+
+</div>
 
 **Version:** 1.2.0
 
@@ -10,66 +22,151 @@
 
 **Date:** 2026-10-01
 
-Digital Organism Architecture (DOA) — метаархитектурный стандарт для проектирования ИИ-систем как управляемых, наблюдаемых и восстанавливаемых цифровых организмов.
+> **In short (English).** DOA is a meta-architecture standard that describes an AI system as a *digital organism*: a signed genome (desired state), isolated cells, a lifecycle, homeostasis, an immune response, recovery and bounded termination. It gives you 49 testable requirements, 15 JSON Schemas, 5 canonical state machines, a conformance-claim process and a Verification Kit. It is a specification, not a runtime or a framework. Most documents are written in Russian with English technical terms.
 
-DOA не является приложением, agent framework, control plane или готовым runtime. `AI-Engineering-Control-Plane`, Cellular OS, Agent Harness, Autopilot Flywheel, LLM-сервисы и робототехнические комплексы могут быть реализациями или надстройками DOA, но не входят в сам стандарт.
+## Что это
 
-## Что нормативно определяет DOA
+Digital Organism Architecture (DOA) — метаархитектурный стандарт. Он описывает ИИ-систему (агентов, инструменты, модели, данные, а при необходимости и физические устройства) как **цифровой организм**: у него есть граница, идентичность, жизненный цикл, механизмы самозащиты и восстановления, ограниченный рост и безопасное завершение.
 
-- границы организма, trust boundaries, идентичность (включая continuity при замене компонентов), геном, эпигеном и происхождение состояния;
-- клетки, ткани, органы и их специализацию;
-- data, control, security, memory, metabolic и observability planes;
-- гомеостаз (контуры, пороги, эскалация), иммунитет (полный жизненный цикл ответа), восстановление (restart ≠ restore ≠ repair ≠ regenerate), старение, безопасное завершение и ограничение роста;
+Биология здесь не украшение, а способ дать каждому механизму ответственность, контракт и способ проверки. Аналогия сама по себе ничего не доказывает: механизм засчитывается, только если у него есть проверяемое цифровое воплощение и evidence (доказательство, которое можно воспроизвести).
+
+| Биологический механизм | Что это в цифровой системе | Где описано |
+|---|---|---|
+| Геном | подписанное декларативное описание желаемого состояния | [`GENOME_AND_EVOLUTION.md`](docs/GENOME_AND_EVOLUTION.md) |
+| Клетка | минимальная изолируемая единица исполнения; агент — клетка | [`LIFECYCLE.md`](docs/LIFECYCLE.md) |
+| Гомеостаз | замкнутые контуры регулирования с порогами, эскалацией и ручным отключением | [`HOMEOSTASIS.md`](docs/HOMEOSTASIS.md) |
+| Иммунитет | обнаружение, карантин без согласия нарушителя, обновление защит | [`SECURITY_AND_IMMUNITY.md`](docs/SECURITY_AND_IMMUNITY.md) |
+| Регенерация | восстановление из доверенного источника, а не копирование повреждённого состояния | [`FAILURE_AND_RECOVERY.md`](docs/FAILURE_AND_RECOVERY.md) |
+| Апоптоз | ограниченное по времени и шагам завершение без остаточных прав | [`LIFECYCLE.md`](docs/LIFECYCLE.md) |
+
+## Для кого
+
+| Вы | Что вам даёт DOA | С чего начать |
+|---|---|---|
+| Архитектор ИИ-системы | общий язык и обязательные механизмы: границы, права, восстановление, ограничение роста | [стандарт](docs/DOA_STANDARD_v1.0.md), [архитектура](docs/ARCHITECTURE.md) |
+| Владелец реализации | список требований и способ честно показать, что выполнено | [руководство по применению](docs/IMPLEMENTATION_GUIDE.md), [шаблон claim](templates/DOA_CONFORMANCE_CLAIM.md) |
+| Инженер по надёжности или QA | кейсы проверки, сценарии отказа, формат отчёта | [Verification Kit](docs/VERIFICATION_KIT.md) |
+| Специалист по безопасности | модель доверия, иммунный ответ, шаблон threat model | [безопасность](docs/SECURITY_AND_IMMUNITY.md), [шаблон](templates/DOA_THREAT_MODEL.md) |
+| Разработчик робототехники | физическая безопасность, real-time бюджет, hazard analysis | [расширение](docs/ROBOTICS_EXTENSION.md), [шаблон](templates/DOA_HAZARD_ANALYSIS.md) |
+| Контрибьютор | правила изменений и модель решений | [CONTRIBUTING.md](CONTRIBUTING.md), [GOVERNANCE.md](GOVERNANCE.md) |
+
+## Чем DOA не является
+
+DOA не приложение, не agent framework, не control plane и не готовый runtime. `AI-Engineering-Control-Plane`, Cellular OS, Agent Harness, Autopilot Flywheel, LLM-сервисы и робототехнические комплексы могут быть реализациями или надстройками DOA, но не входят в сам стандарт. DOA не заменяет отраслевую функциональную безопасность, regulation и вашу методику моделирования угроз, и не сертифицирует реализации.
+
+## Что определяет стандарт
+
+- границы организма, trust boundaries (границы доверия), идентичность и её непрерывность при замене компонентов, геном и эпигеном (временные подписанные настройки, не повышающие права);
+- клетки, ткани и органы, их специализацию и failure domains (области, в которых отказ не должен распространяться);
+- гомеостаз, иммунитет с полным жизненным циклом ответа, восстановление (`RESTART` ≠ `RESTORE` ≠ `REPAIR` ≠ `REGENERATE`), старение, безопасное завершение и ограничение роста;
 - обучение и эволюцию только через управляемые контуры с проверкой и откатом;
-- обязательный мэппинг каждого биологического механизма: responsibility → component → contract → protocol → invariant → failure mode → security/safety control → observability → evidence;
-- машиночитаемые state machines, схемы контрактов и реестр требований соответствия;
+- каноническую матрицу из 119 механизмов Biology-to-IT, 25 классов отказа, 5 машин состояний, 15 схем контрактов и 49 проверяемых требований;
 - профили соответствия и минимальный комплект доказательств.
 
-## Начало работы
-
-1. Прочитайте [канонический стандарт](docs/DOA_STANDARD_v1.0.md).
-2. Выберите профили и изучите требования в [CONFORMANCE.md](docs/CONFORMANCE.md).
-3. Сопоставьте компоненты с [реестром Biology-to-IT](docs/BIOLOGY_TO_IT_MAPPING.md).
-4. Определите границу организма: [BOUNDARY_AND_IDENTITY.md](docs/BOUNDARY_AND_IDENTITY.md).
-5. Опишите организм через схемы из `specifications/` и сверьтесь с `reference/EXAMPLE_GENOME.yaml` и `reference/examples/`.
-6. Проверьте reference architecture и наблюдаемые инварианты.
-
-## Канонические документы
-
-- `docs/DOA_STANDARD_v1.0.md` — нормативное ядро;
-- `docs/TERMINOLOGY.md` — нормативный язык, статус документов, глоссарий;
-- `docs/ARCHITECTURE.md` — слои, planes и архитектурные цепочки;
-- `docs/BOUNDARY_AND_IDENTITY.md` — граница организма, identity, trust;
-- `docs/LIFECYCLE.md` — state machines, старение, завершение;
-- `docs/FAILURE_AND_RECOVERY.md` — таксономия восстановления, классы отказов, runaway growth;
-- `docs/CONFORMANCE.md` — требования, evidence, статусы claim;
-- `docs/IMPLEMENTATION_GUIDE.md` — как применять стандарт к control plane, навыкам для LLM и системам на стадии проектирования (informative);
-- `docs/VERIFICATION_KIT.md` — тестовый план, сценарии отказа, конвенции `doa.*` и шаблоны для получения evidence (informative);
-- `docs/BIOLOGY_TO_IT_MAPPING.md` — каноническая матрица механизмов;
-- `docs/SECURITY_AND_IMMUNITY.md` — доверие, иммунитет, карантин и apoptosis;
-- `docs/HOMEOSTASIS.md` — измеримые контрольные циклы;
-- `docs/MEMORY_AND_NERVOUS_SYSTEM.md` — cognition, reflexes, memory и learning;
-- `docs/METABOLISM.md` — ingestion, compute, cost, detoxification и excretion;
-- `docs/GENOME_AND_EVOLUTION.md` — signed desired state, expression и controlled evolution;
-- `docs/ROBOTICS_EXTENSION.md` — физическая безопасность и real-time профиль;
-- `CHANGES_AND_NEW_FINDINGS.md` — история находок и изменений относительно исходной концепции.
-
-## Проверка и соответствие
-
-Локальная проверка структуры, schemas, примеров (valid и invalid), state machines, матрицы, реестра требований, ссылок и диаграмм:
-
-```bash
-python -m pip install -r requirements-validation.txt
-python scripts/validate_repository.py
+```mermaid
+flowchart LR
+    A["Выбрать профили"] --> B["Определить границу организма"]
+    B --> C["Сопоставить компоненты с реестром"]
+    C --> D["Собрать evidence: тесты и сценарии отказа"]
+    D --> E["Опубликовать claim"]
+    E --> F["Проверить скриптом"]
 ```
 
-Реализация DOA публикует отдельный claim по шаблону `templates/DOA_CONFORMANCE_CLAIM.md` и проверяет его командой `python scripts/check_conformance_claim.py claim.yaml`. Наличие термина DOA в документации без evidence pack не означает соответствие. Для сбора evidence по требованиям используйте [Verification Kit](docs/VERIFICATION_KIT.md); отчёт о прогоне проверяется командой `python scripts/check_verification_report.py report.yaml [--claim claim.yaml]`.
+## С чего начать
 
-Правила изменений определены в `CONTRIBUTING.md`, модель принятия решений — в `GOVERNANCE.md`, порядок сообщения об уязвимостях — в `SECURITY.md`.
+1. Прочитайте [канонический стандарт](docs/DOA_STANDARD_v1.0.md): конституционные инварианты и сущности.
+2. Откройте [указатель документации](docs/README.md): там пути чтения для разных ролей.
+3. Определите границу организма: [BOUNDARY_AND_IDENTITY.md](docs/BOUNDARY_AND_IDENTITY.md).
+4. Выберите профили и изучите требования: [CONFORMANCE.md](docs/CONFORMANCE.md).
+5. Опишите организм схемами из [`specifications/`](specifications/) и сверьтесь с [`reference/EXAMPLE_GENOME.yaml`](reference/EXAMPLE_GENOME.yaml).
+
+## Быстрый старт
+
+Нужны Python 3.12 (версия, на которой работает CI) и `pip`. Скрипты только читают файлы репозитория и ничего в нём не изменяют.
+
+```bash
+git clone https://github.com/Alpha-Oi/digital-organism-architecture.git
+cd digital-organism-architecture
+python -m pip install -r requirements-validation.txt
+
+# проверить сам стандарт: схемы, примеры, машины состояний, реестры, ссылки
+python scripts/validate_repository.py
+
+# проверить пример conformance claim
+python scripts/check_conformance_claim.py reference/examples/valid/conformance-claim--reference.yaml
+
+# проверить пример отчёта о прогоне Verification Kit
+python scripts/check_verification_report.py reference/examples/valid/verification-report--reference.yaml
+```
+
+Каждая команда печатает `PASS` или список ошибок. Первая проверяет сам стандарт, две других показывают, как выглядят проверяемые материалы реализации.
+
+## Как применить стандарт
+
+1. **Выберите профили.** `Core` обязателен всегда. Остальные добавляйте по необходимости.
+2. **Опишите организм.** Геном (`genome`), органы, клетки, права и ресурсы по схемам из `specifications/`.
+3. **Сопоставьте с реестром.** Для каждого требования укажите, где оно реализовано, и приложите evidence.
+4. **Проверьте себя.** Используйте кейсы и сценарии [Verification Kit](docs/VERIFICATION_KIT.md) в изолированной или staging-среде, никогда на production.
+5. **Оформите claim.** Заполните [шаблон](templates/DOA_CONFORMANCE_CLAIM.md) и проверьте командой `check_conformance_claim.py`. Честные статусы (`PASS`, `PARTIAL`, `DESIGNED`, `FAIL`) ценнее красивого общего ответа.
+
+Профили соответствия:
+
+| Профиль | Что добавляет |
+|---|---|
+| Core | идентичность, граница, геном, жизненный цикл, гомеостаз, иммунитет, учёт ресурсов, память, наблюдаемость, восстановление, старение, завершение |
+| Distributed | контракт событий, частичные отказы, топология, кворум и failover, часы, дрейф, катастрофическое восстановление |
+| Adaptive | управляемое обучение и эволюция, обнаружение дрейфа, происхождение вариантов |
+| Embodied | физическая безопасность, real-time бюджет, калибровка, ограничения исполнителей, сброс блокировки |
+| Conditional | контроль воспроизводства, федерации и обмена между линиями — либо их явный запрет |
+
+Формулировка «реализует DOA Profile X (claim: ссылка)» допустима. Формулировки «DOA-compliant» и «DOA-certified» без ссылки на claim со статусом `VERIFIED` запрещены.
+
+## Состав репозитория
+
+```text
+docs/            нормативные и информационные документы стандарта
+specifications/  схемы контрактов, машины состояний, реестры требований и классов отказа
+reference/       эталонный геном, эталонная архитектура, примеры valid и invalid
+verification/    тестовый план, сценарии отказа, конвенции OpenTelemetry doa.*
+templates/       шаблоны claim, threat model и hazard analysis
+diagrams/        диаграммы Mermaid, производные от машин состояний
+scripts/         проверка стандарта, claim и отчётов
+.github/         CI, шаблоны issue и pull request, Dependabot
+```
+
+Ключевые документы:
+
+- [`docs/DOA_STANDARD_v1.0.md`](docs/DOA_STANDARD_v1.0.md) — нормативное ядро;
+- [`docs/CONFORMANCE.md`](docs/CONFORMANCE.md) — требования, evidence, статусы claim;
+- [`docs/BIOLOGY_TO_IT_MAPPING.md`](docs/BIOLOGY_TO_IT_MAPPING.md) — каноническая матрица механизмов;
+- [`docs/FAILURE_AND_RECOVERY.md`](docs/FAILURE_AND_RECOVERY.md) — таксономия восстановления и классы отказа;
+- [`docs/IMPLEMENTATION_GUIDE.md`](docs/IMPLEMENTATION_GUIDE.md) — руководство по применению (informative);
+- [`docs/VERIFICATION_KIT.md`](docs/VERIFICATION_KIT.md) — как получать и показывать evidence (informative);
+- [`docs/TERMINOLOGY.md`](docs/TERMINOLOGY.md) — нормативный язык, статус документов, глоссарий.
+
+Полный перечень с порядком чтения — в [`docs/README.md`](docs/README.md).
+
+## Версии и дорожная карта
+
+Версионирование — SemVer, правила совместимости — в [GOVERNANCE.md](GOVERNANCE.md). История изменений — [CHANGELOG.md](CHANGELOG.md), планы — [ROADMAP.md](ROADMAP.md). Ближайший пункт — профили внедрения (1.3); крупная версия 2.0 возможна только после двух независимых реализаций.
+
+## Участие
+
+Приветствуются уточнения, найденные пробелы и отчёты о применении стандарта.
+
+- Нашли пробел или неоднозначность: откройте issue по форме [Standard gap](https://github.com/Alpha-Oi/digital-organism-architecture/issues/new/choose).
+- Применили DOA: расскажите, что получилось и что нет (форма «Application report»). Такие отчёты нужны для версии 2.0.
+- Хотите внести изменение: прочитайте [CONTRIBUTING.md](CONTRIBUTING.md) и [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+- Вопросы: [SUPPORT.md](SUPPORT.md).
+- Уязвимости и обход safety controls не публикуйте в issue: [SECURITY.md](SECURITY.md).
 
 ## Нормативный язык
 
 Ключевые слова **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** и **MAY** используются в смысле RFC 2119/RFC 8174. Биологическая аналогия сама по себе не создаёт соответствия DOA: нужен исполняемый или проверяемый цифровой механизм.
+
+## Цитирование
+
+Для ссылки на стандарт используйте [CITATION.cff](CITATION.cff): GitHub покажет кнопку «Cite this repository».
 
 ## Лицензия
 

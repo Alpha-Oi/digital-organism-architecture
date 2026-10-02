@@ -1,0 +1,31 @@
+name: Bug report
+description: Сообщить об ошибке в тексте, схеме, примере, шаблоне или скрипте
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Не публикуйте здесь credentials, личные данные, уязвимости и способы обойти safety controls. Для них используйте [приватное сообщение](https://github.com/Alpha-Oi/digital-organism-architecture/security/advisories/new).
+  - type: input
+    id: version
+    attributes:
+      label: Версия
+      description: Содержимое файла `VERSION` или commit.
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Где ошибка
+      description: Файл, раздел, схема или команда.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Что ожидалось и что получилось
+      description: Если ошибка в скрипте, приложите команду и её вывод.
+    validations:
+      required: true

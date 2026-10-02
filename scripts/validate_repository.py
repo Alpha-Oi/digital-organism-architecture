@@ -33,11 +33,13 @@ SCHEMA_NAMES = {
 REQUIRED_FILES = {
     ".gitattributes", ".gitignore", ".github/CODEOWNERS", ".github/dependabot.yml", ".github/pull_request_template.md",
     ".github/ISSUE_TEMPLATE/standard-gap.yml", ".github/workflows/validate.yml",
-    "CHANGELOG.md", "CHANGES_AND_NEW_FINDINGS.md", "CONTRIBUTING.md", "GOVERNANCE.md", "LICENSE", "README.md",
-    "ROADMAP.md", "SECURITY.md", "VERSION",
+    ".github/ISSUE_TEMPLATE/application-report.yml", ".github/ISSUE_TEMPLATE/bug-report.yml",
+    ".github/ISSUE_TEMPLATE/config.yml", ".github/ISSUE_TEMPLATE/question.yml",
+    "CHANGELOG.md", "CHANGES_AND_NEW_FINDINGS.md", "CITATION.cff", "CODE_OF_CONDUCT.md", "CONTRIBUTING.md", "GOVERNANCE.md",
+    "LICENSE", "README.md", "ROADMAP.md", "SECURITY.md", "SUPPORT.md", "VERSION",
     "docs/ARCHITECTURE.md", "docs/BIOLOGY_TO_IT_MAPPING.md", "docs/BOUNDARY_AND_IDENTITY.md", "docs/CONFORMANCE.md",
     "docs/DOA_STANDARD_v1.0.md", "docs/FAILURE_AND_RECOVERY.md", "docs/GENOME_AND_EVOLUTION.md", "docs/HOMEOSTASIS.md",
-    "docs/IMPLEMENTATION_GUIDE.md", "docs/VERIFICATION_KIT.md",
+    "docs/IMPLEMENTATION_GUIDE.md", "docs/README.md", "docs/VERIFICATION_KIT.md",
     "docs/LIFECYCLE.md", "docs/MEMORY_AND_NERVOUS_SYSTEM.md", "docs/METABOLISM.md", "docs/PRINCIPLES.md",
     "docs/RELEASE_READINESS_v1.0.md", "docs/ROBOTICS_EXTENSION.md", "docs/SECURITY_AND_IMMUNITY.md", "docs/SOURCES.md",
     "docs/TERMINOLOGY.md",
@@ -742,6 +744,41 @@ def validate_versions(errors: list[str]) -> None:
         fail(errors, f"HomeostaticSignal used outside terminology/standard: {holders}")
 
 
+COMMUNITY_LINKS = ("CODE_OF_CONDUCT.md", "CONTRIBUTING.md", "SECURITY.md", "SUPPORT.md", "LICENSE", "docs/README.md")
+
+
+def validate_community_files(errors: list[str]) -> None:
+    """GitHub community-standard files: citation metadata, issue forms and links from the README."""
+    citation = yaml.safe_load(text_of("CITATION.cff"))
+    for key in ("cff-version", "message", "title", "authors", "version", "date-released", "license", "repository-code"):
+        if not citation.get(key):
+            fail(errors, f"CITATION.cff: missing {key}")
+    if str(citation.get("version")) != text_of("VERSION").strip():
+        fail(errors, "CITATION.cff version differs from VERSION")
+    readme = text_of("README.md")
+    for link in COMMUNITY_LINKS:
+        if f"]({link})" not in readme:
+            fail(errors, f"README.md must link to {link}")
+    forms = sorted(p for p in (ROOT / ".github/ISSUE_TEMPLATE").glob("*.yml") if p.name != "config.yml")
+    if len(forms) < 4:
+        fail(errors, "expected at least four issue forms")
+    for path in forms:
+        form = yaml.safe_load(path.read_text(encoding="utf-8"))
+        relative = path.relative_to(ROOT)
+        for key in ("name", "description", "body"):
+            if not form.get(key):
+                fail(errors, f"issue form {relative}: missing {key}")
+        ids = [item["id"] for item in form.get("body", []) if "id" in item]
+        if len(ids) != len(set(ids)) or not any(item.get("type") != "markdown" for item in form.get("body", [])):
+            fail(errors, f"issue form {relative}: needs unique ids and at least one input")
+    config = yaml.safe_load(text_of(".github/ISSUE_TEMPLATE/config.yml"))
+    if config.get("blank_issues_enabled") is not False or not config.get("contact_links"):
+        fail(errors, "issue template config must disable blank issues and list contact links")
+    for link in config.get("contact_links", []):
+        if not str(link.get("url", "")).startswith("https://github.com/Alpha-Oi/digital-organism-architecture/"):
+            fail(errors, f"issue template contact link must point to this repository: {link.get('url')}")
+
+
 def validate_workflow(errors: list[str]) -> None:
     workflow = yaml.safe_load(text_of(".github/workflows/validate.yml"))
     if workflow.get("permissions") != {"contents": "read"}:
@@ -791,6 +828,7 @@ def main() -> int:
     validate_diagrams(errors)
     validate_versions(errors)
     validate_workflow(errors)
+    validate_community_files(errors)
     validate_canonical_terms(errors)
 
     if errors:
@@ -809,6 +847,7 @@ def main() -> int:
     print("- Verification Kit: test plan, fault scenarios, doa.* conventions and report checker consistent")
     print("- Markdown links, tables, whitespace and cross-references: valid")
     print(f"- Mermaid documents: {len(DIAGRAM_MACHINES) + len(OTHER_DIAGRAMS)}")
+    print("- community files: citation, issue forms and README links valid")
     print(f"- version: {text_of('VERSION').strip()}")
     return 0
 
