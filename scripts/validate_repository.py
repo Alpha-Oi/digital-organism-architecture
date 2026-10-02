@@ -78,6 +78,7 @@ REQUIRED_MAPPING_TERMS = {
 MAPPING_COLUMNS = 12
 PROFILES = {"Core", "Distributed", "Adaptive", "Embodied", "Conditional", "Pattern", "Anti-pattern"}
 REQ_PREFIX = {"Core": "CORE", "Distributed": "DIST", "Adaptive": "ADPT", "Embodied": "EMB", "Conditional": "COND"}
+MAX_PATH_NODES = 10
 
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 MERMAID_BLOCK = re.compile(r"```mermaid\s*\n(.*?)```", re.DOTALL)
@@ -227,14 +228,32 @@ def validate_state_machines(errors: list[str], schemas: dict[str, dict], machine
         path = ROOT / "diagrams" / f"{diagram}.md"
         if not path.is_file():
             continue
-        block = MERMAID_BLOCK.findall(path.read_text(encoding="utf-8"))
-        if len(block) != 1:
+        text = path.read_text(encoding="utf-8")
+        blocks = MERMAID_BLOCK.findall(text)
+        full = [b for b in blocks if b.lstrip().startswith("stateDiagram")]
+        simple = [b for b in blocks if b.lstrip().startswith("flowchart TD")]
+        if len(blocks) != 2 or len(full) != 1 or len(simple) != 1:
             continue
-        edges = {m.groups() for line in block[0].splitlines() if (m := EDGE.match(line))}
+        edges = {m.groups() for line in full[0].splitlines() if (m := EDGE.match(line))}
         expected = {(t["from"], t["to"]) for t in machines[machine_name]["transitions"]}
         if edges != expected:
             fail(errors, f"diagram {diagram}.md edges differ from machine {machine_name}: "
                          f"missing {sorted(expected - edges)}, extra {sorted(edges - expected)}")
+        path_edges = {m.groups() for line in simple[0].splitlines() if (m := EDGE.match(line))}
+        if not path_edges <= expected:
+            fail(errors, f"diagram {diagram}.md main path has transitions absent from machine {machine_name}: "
+                         f"{sorted(path_edges - expected)}")
+        path_nodes = {state for edge in path_edges for state in edge}
+        if len(path_nodes) > MAX_PATH_NODES:
+            fail(errors, f"diagram {diagram}.md main path has {len(path_nodes)} nodes, at most {MAX_PATH_NODES} stay readable")
+        section = text.split("## Что значит каждое состояние")
+        if len(section) != 2:
+            fail(errors, f"diagram {diagram}.md lacks the state meaning table")
+        else:
+            listed = re.findall(r"^\| `([A-Z_]+)` \|", section[1].split("\n## ")[0], re.M)
+            if sorted(listed) != sorted(machines[machine_name]["states"]):
+                fail(errors, f"diagram {diagram}.md state table differs from machine {machine_name}: "
+                             f"{sorted(set(listed) ^ set(machines[machine_name]['states']))}")
 
     doc = text_of("docs/LIFECYCLE.md")
     for machine_name in machines:
@@ -692,11 +711,16 @@ def validate_diagrams(errors: list[str]) -> None:
     if found != expected:
         fail(errors, f"diagram set mismatch: missing {sorted(expected - found)}, extra {sorted(found - expected)}")
     for path in sorted((ROOT / "diagrams").glob("*.md")):
-        blocks = MERMAID_BLOCK.findall(path.read_text(encoding="utf-8"))
-        if len(blocks) != 1:
-            fail(errors, f"expected one Mermaid block: {path.relative_to(ROOT)}")
-        elif not MERMAID_START.search(blocks[0]):
-            fail(errors, f"unknown Mermaid diagram start: {path.relative_to(ROOT)}")
+        text = path.read_text(encoding="utf-8")
+        blocks = MERMAID_BLOCK.findall(text)
+        expected_blocks = 2 if path.stem in DIAGRAM_MACHINES else 1
+        if len(blocks) != expected_blocks:
+            fail(errors, f"expected {expected_blocks} Mermaid block(s): {path.relative_to(ROOT)}")
+        for block in blocks:
+            if not MERMAID_START.search(block):
+                fail(errors, f"unknown Mermaid diagram start: {path.relative_to(ROOT)}")
+        if "## Простыми словами" not in text:
+            fail(errors, f"diagram page lacks the plain-language section: {path.relative_to(ROOT)}")
 
 
 def validate_yaml_documents(errors: list[str]) -> None:
