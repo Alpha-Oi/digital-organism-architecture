@@ -1,0 +1,242 @@
+# DOA Verification Kit: reference OpenTelemetry semantic conventions for the `doa.*` namespace (informative, development stability).
+# Attribute values are derived from the normative registries and schemas (single source of truth); `values_from` is checked by
+# scripts/validate_repository.py. This is a DOA-local registry modelled on the structure of OpenTelemetry semantic-convention registries;
+# it has NOT been validated with OpenTelemetry tooling (see docs/VERIFICATION_KIT.md, section 5).
+# Naming: lowercase dot-separated namespaces, snake_case within a component, no unit in a metric name, UCUM units, `doa` is the only root namespace.
+# metric_safe: false marks identifiers whose cardinality is unbounded; they MUST NOT be metric attributes (use them on events and spans).
+standard: DOA-FS-1.0
+namespace: doa
+stability: development
+attributes:
+  - name: doa.organism.id
+    type: string
+    brief: Идентификатор организма (`organism.id`).
+    source: specifications/organism.schema.json#/properties/id
+    metric_safe: true
+  - name: doa.organ.id
+    type: string
+    brief: Идентификатор органа (`organ.id`).
+    source: specifications/organ.schema.json#/properties/id
+    metric_safe: true
+  - name: doa.cell.id
+    type: string
+    brief: Идентификатор клетки (`cell.id`).
+    source: specifications/cell.schema.json#/properties/id
+    metric_safe: false
+  - name: doa.cell.type
+    type: string
+    brief: Тип клетки (`cell.type`).
+    source: specifications/cell.schema.json#/properties/type
+    metric_safe: true
+  - name: doa.cell.tissue
+    type: string
+    brief: Ткань, к которой относится клетка (`cell.tissue`).
+    source: specifications/cell.schema.json#/properties/tissue
+    metric_safe: true
+  - name: doa.epoch
+    type: int
+    brief: Membership/recovery epoch, использованный для fencing (`event.epoch`, `organism.epoch`).
+    source: specifications/event.schema.json#/properties/epoch
+    metric_safe: false
+  - name: doa.lifecycle.entity_type
+    type: string
+    brief: Тип сущности, чей жизненный цикл изменился.
+    source: specifications/lifecycle-transition.schema.json#/properties/entity_type
+    values_from: {kind: schema-enum, file: specifications/lifecycle-transition.schema.json, path: [properties, entity_type, enum]}
+    metric_safe: true
+  - name: doa.lifecycle.entity_id
+    type: string
+    brief: Идентификатор сущности, изменившей состояние.
+    source: specifications/lifecycle-transition.schema.json#/properties/entity_id
+    metric_safe: false
+  - name: doa.lifecycle.state.from
+    type: string
+    brief: Исходное состояние перехода; MUST быть состоянием канонической машины `doa.lifecycle.entity_type`.
+    source: specifications/state-machines.yaml
+    metric_safe: true
+  - name: doa.lifecycle.state.to
+    type: string
+    brief: Целевое состояние перехода; MUST быть состоянием канонической машины `doa.lifecycle.entity_type`.
+    source: specifications/state-machines.yaml
+    metric_safe: true
+  - name: doa.lifecycle.authority
+    type: string
+    brief: Authority, разрешивший переход.
+    source: specifications/lifecycle-transition.schema.json#/properties/authority
+    metric_safe: false
+  - name: doa.failure_class.id
+    type: string
+    brief: Класс отказа из реестра.
+    source: specifications/failure-classes.yaml
+    values_from: {kind: failure-classes}
+    metric_safe: true
+  - name: doa.recovery.mode
+    type: string
+    brief: Режим восстановления.
+    source: specifications/organ.schema.json#/properties/recovery/properties/modes
+    values_from: {kind: schema-enum, file: specifications/organ.schema.json, path: [properties, recovery, properties, modes, items, enum]}
+    metric_safe: true
+  - name: doa.recovery.outcome
+    type: string
+    brief: Итог попытки восстановления.
+    source: docs/FAILURE_AND_RECOVERY.md, раздел 1 (эскалация режимов)
+    values: [succeeded, failed, escalated]
+    metric_safe: true
+  - name: doa.health.dimension
+    type: string
+    brief: Измерение HealthEvidence.
+    source: specifications/health-evidence.schema.json
+    values: [startup, readiness, liveness, correctness, freshness]
+    metric_safe: true
+  - name: doa.health.result
+    type: string
+    brief: Результат измерения HealthEvidence; отсутствие сигнала MUST быть UNKNOWN (REQ-CORE-13).
+    source: specifications/health-evidence.schema.json#/properties/startup
+    values_from: {kind: schema-enum, file: specifications/health-evidence.schema.json, path: [properties, startup, enum]}
+    metric_safe: true
+  - name: doa.accounting.kind
+    type: string
+    brief: Вид учёта ресурса (REQ-CORE-18).
+    source: docs/METABOLISM.md, раздел 1
+    values: [reserved, observed]
+    metric_safe: true
+  - name: doa.capability.grant.id
+    type: string
+    brief: Идентификатор CapabilityGrant.
+    source: specifications/capability-grant.schema.json#/properties/id
+    metric_safe: false
+  - name: doa.event.classification
+    type: string
+    brief: Классификация данных события.
+    source: specifications/event.schema.json#/properties/classification
+    values_from: {kind: schema-enum, file: specifications/event.schema.json, path: [properties, classification, enum]}
+    metric_safe: true
+  - name: doa.verification.run.id
+    type: string
+    brief: Идентификатор прогона проверки; помечает всю телеметрию, порождённую прогоном.
+    source: specifications/verification-report.schema.json
+    metric_safe: false
+  - name: doa.verification.scenario.id
+    type: string
+    brief: Идентификатор сценария отказа (`FS-…`).
+    source: verification/fault-scenarios.yaml
+    values_from: {kind: fault-scenarios}
+    metric_safe: false
+events:
+  - name: doa.lifecycle.{entity_type}.transitioned.v1
+    brief: Переход состояния сущности (REQ-CORE-11); `{entity_type}` принимает значения `doa.lifecycle.entity_type`.
+    attributes:
+      - {ref: doa.lifecycle.entity_type, requirement_level: required}
+      - {ref: doa.lifecycle.entity_id, requirement_level: required}
+      - {ref: doa.lifecycle.state.from, requirement_level: required}
+      - {ref: doa.lifecycle.state.to, requirement_level: required}
+      - {ref: doa.lifecycle.authority, requirement_level: required}
+      - {ref: doa.epoch, requirement_level: recommended}
+    requirements: [REQ-CORE-11]
+  - name: doa.recovery.attempted.v1
+    brief: Попытка восстановления выбранным режимом.
+    attributes:
+      - {ref: doa.recovery.mode, requirement_level: required}
+      - {ref: doa.recovery.outcome, requirement_level: required}
+      - {ref: doa.failure_class.id, requirement_level: recommended}
+      - {ref: doa.organ.id, requirement_level: recommended}
+      - {ref: doa.cell.id, requirement_level: opt_in}
+    requirements: [REQ-CORE-10, REQ-CORE-20, REQ-CORE-23]
+  - name: doa.verification.scenario.injected.v1
+    brief: Начало инъекции сценария отказа; закрывает окно, в котором отклонения ожидаемы.
+    attributes:
+      - {ref: doa.verification.run.id, requirement_level: required}
+      - {ref: doa.verification.scenario.id, requirement_level: required}
+      - {ref: doa.failure_class.id, requirement_level: recommended}
+    requirements: [REQ-CORE-23]
+  - name: doa.verification.scenario.completed.v1
+    brief: Завершение сценария отказа, инъекция снята, наблюдение окончено.
+    attributes:
+      - {ref: doa.verification.run.id, requirement_level: required}
+      - {ref: doa.verification.scenario.id, requirement_level: required}
+    requirements: [REQ-CORE-23]
+metrics:
+  - name: doa.cell.count
+    instrument: updowncounter
+    unit: "{cell}"
+    brief: Число клеток организма (`cell_count`); сравнивается с `growth_control.max_cells`.
+    attributes: [doa.organism.id, doa.cell.tissue]
+    requirements: [REQ-CORE-17]
+  - name: doa.cell.spawned
+    instrument: counter
+    unit: "{cell}"
+    brief: Число созданных клеток; скорость spawn (`spawn_rate`) вычисляется как rate.
+    attributes: [doa.organism.id, doa.cell.type]
+    requirements: [REQ-CORE-17]
+  - name: doa.cell.generation.depth
+    instrument: gauge
+    unit: "{generation}"
+    brief: Максимальная глубина spawn (`generation_depth`).
+    attributes: [doa.organism.id]
+    requirements: [REQ-CORE-17]
+  - name: doa.cell.orphan.count
+    instrument: updowncounter
+    unit: "{cell}"
+    brief: Клетки без родителя либо с просроченным lease (`orphan_count`).
+    attributes: [doa.organism.id]
+    requirements: [REQ-CORE-17]
+  - name: doa.capability.delegation.depth
+    instrument: gauge
+    unit: "{delegation}"
+    brief: Максимальная глубина цепочки делегирования grants (`delegation_depth`).
+    attributes: [doa.organism.id]
+    requirements: [REQ-CORE-05, REQ-CORE-17]
+  - name: doa.capability.grant.live_after_termination
+    instrument: gauge
+    unit: "{grant}"
+    brief: Число действующих grants у завершённых клеток (`live_grants_after_term`); ожидаемое значение — 0.
+    attributes: [doa.organism.id]
+    requirements: [REQ-CORE-15]
+  - name: doa.budget.used.ratio
+    instrument: gauge
+    unit: "1"
+    brief: Доля использованного бюджета (`budget_used_ratio`); reserved и observed MUST отличаться атрибутом `doa.accounting.kind`.
+    attributes: [doa.organism.id, doa.accounting.kind]
+    requirements: [REQ-CORE-18]
+  - name: doa.lifecycle.transitions
+    instrument: counter
+    unit: "{transition}"
+    brief: Число переходов состояний.
+    attributes: [doa.lifecycle.entity_type, doa.lifecycle.state.from, doa.lifecycle.state.to]
+    requirements: [REQ-CORE-11]
+  - name: doa.cell.fencing.duration
+    instrument: histogram
+    unit: s
+    brief: Время от потери lease до fencing клетки.
+    attributes: [doa.organism.id]
+    requirements: [REQ-CORE-16]
+  - name: doa.recovery.duration
+    instrument: histogram
+    unit: s
+    brief: Длительность восстановления; сравнивается с `recovery.rto` органа.
+    attributes: [doa.recovery.mode, doa.recovery.outcome, doa.failure_class.id]
+    requirements: [REQ-CORE-10, REQ-CORE-20]
+  - name: doa.health.result.count
+    instrument: counter
+    unit: "{result}"
+    brief: Число измерений HealthEvidence по результату; рост UNKNOWN показывает потерю сигнала.
+    attributes: [doa.organ.id, doa.health.dimension, doa.health.result]
+    requirements: [REQ-CORE-13]
+  - name: doa.circulation.vital_flow.duration
+    instrument: histogram
+    unit: s
+    brief: Latency vital flow (identity, safety, audit, recovery) при перегрузке.
+    attributes: [doa.organism.id]
+    requirements: [REQ-DIST-02]
+  - name: doa.clock.skew
+    instrument: gauge
+    unit: s
+    brief: Оценка смещения часов узла относительно источника.
+    attributes: [doa.organism.id]
+    requirements: [REQ-DIST-05]
+  - name: doa.drift.score
+    instrument: gauge
+    unit: "1"
+    brief: Оценка расхождения поведения или реплики с baseline.
+    attributes: [doa.organism.id, doa.organ.id]
+    requirements: [REQ-DIST-06, REQ-ADPT-05]

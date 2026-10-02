@@ -1,12 +1,12 @@
 # Digital Organism Architecture (DOA)
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 
 **Standard identifier:** `DOA-FS-1.0`
 
 **Status:** Foundational Standard (released)
 
-**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.1.0: необязательный статус `DESIGNED`, реестр классов отказа, уточнения `REQ-CORE-18` и `REQ-CORE-22`)
+**Release notes:** [CHANGELOG.md](CHANGELOG.md) (v1.2.0: Verification Kit — тестовый план, сценарии отказа, конвенции OpenTelemetry `doa.*`, шаблоны threat model и hazard analysis; исправлены формулировки `REQ-CORE-18` и `REQ-CORE-22`)
 
 **Date:** 2026-10-01
 
@@ -44,6 +44,7 @@ DOA не является приложением, agent framework, control plane
 - `docs/FAILURE_AND_RECOVERY.md` — таксономия восстановления, классы отказов, runaway growth;
 - `docs/CONFORMANCE.md` — требования, evidence, статусы claim;
 - `docs/IMPLEMENTATION_GUIDE.md` — как применять стандарт к control plane, навыкам для LLM и системам на стадии проектирования (informative);
+- `docs/VERIFICATION_KIT.md` — тестовый план, сценарии отказа, конвенции `doa.*` и шаблоны для получения evidence (informative);
 - `docs/BIOLOGY_TO_IT_MAPPING.md` — каноническая матрица механизмов;
 - `docs/SECURITY_AND_IMMUNITY.md` — доверие, иммунитет, карантин и apoptosis;
 - `docs/HOMEOSTASIS.md` — измеримые контрольные циклы;
@@ -62,7 +63,7 @@ python -m pip install -r requirements-validation.txt
 python scripts/validate_repository.py
 ```
 
-Реализация DOA публикует отдельный claim по шаблону `templates/DOA_CONFORMANCE_CLAIM.md` и проверяет его командой `python scripts/check_conformance_claim.py claim.yaml`. Наличие термина DOA в документации без evidence pack не означает соответствие.
+Реализация DOA публикует отдельный claim по шаблону `templates/DOA_CONFORMANCE_CLAIM.md` и проверяет его командой `python scripts/check_conformance_claim.py claim.yaml`. Наличие термина DOA в документации без evidence pack не означает соответствие. Для сбора evidence по требованиям используйте [Verification Kit](docs/VERIFICATION_KIT.md); отчёт о прогоне проверяется командой `python scripts/check_verification_report.py report.yaml [--claim claim.yaml]`.
 
 Правила изменений определены в `CONTRIBUTING.md`, модель принятия решений — в `GOVERNANCE.md`, порядок сообщения об уязвимостях — в `SECURITY.md`.
 

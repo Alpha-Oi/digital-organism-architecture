@@ -49,4 +49,3 @@ accepted_risks: []
 reassessment: '2026-12-01'
 observed_accounting:
 - source: provider invoice export (monthly)
-  uncertainty: delayed up to 30 days; covers model API cost only

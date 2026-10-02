@@ -311,6 +311,32 @@
           }
         ]
       }
+    },
+    "observed_accounting": {
+      "description": "Optional (REQ-CORE-18): consumption known only from external telemetry, with its source and uncertainty. Observed figures are never reported as reserved.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "uncertainty"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uncertainty": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     }
   },
   "allOf": [

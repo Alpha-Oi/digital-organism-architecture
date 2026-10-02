@@ -1,0 +1,32 @@
+standard: DOA-FS-1.0
+plan_version: 1.2.0
+implementation: example-organism
+version: 0.4.2
+run_id: vr-2026-10-01-001
+run_date: '2026-10-01'
+executor: platform-reliability team
+environment:
+  type: isolated
+  description: Копия staging без production-данных и credentials; три узла, один failure domain на узел.
+results:
+  - case: TC-CORE-08-01
+    status: PASS
+    executed_at: '2026-10-01T10:15:00Z'
+    evidence_ref: evidence/cell-kill-2026-10-01.md@4f2a9c1
+    notes: SLO соседних клеток в допуске.
+  - case: TC-CORE-16-01
+    status: FAIL
+    executed_at: '2026-10-01T11:00:00Z'
+    notes: Latency fencing превысила заявленный допуск; дефект заведён.
+  - case: TC-EMB-02-01
+    status: SKIPPED
+    justification: Embodied-профиль не заявлен.
+scenario_results:
+  - scenario: FS-CELL-01
+    status: PASS
+    executed_at: '2026-10-01T10:10:00Z'
+    evidence_ref: evidence/fs-cell-01-2026-10-01.json@4f2a9c1
+  - scenario: FS-CELL-02
+    status: FAIL
+    executed_at: '2026-10-01T10:50:00Z'
+    notes: Зависшая клетка не была fenced в заявленный срок.
