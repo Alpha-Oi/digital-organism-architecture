@@ -1,0 +1,195 @@
+# DOA Implementation Profile: modular monolith (informative, implementation-independent).
+# Источник данных для таблицы требований в profiles/modular-monolith.md; scripts/validate_repository.py сверяет ids, applicability и тексты.
+# applicability: applicable | applicable-with-limits (профиль называет предел монолита, который нужно компенсировать или честно объявить).
+# evidence_cases ссылаются на кейсы verification/conformance-test-plan.yaml.
+standard: DOA-FS-1.0
+profile: modular-monolith
+status: informative
+requirements:
+  - id: REQ-CORE-01
+    applicability: applicable-with-limits
+    approach: >-
+      Каждому модулю и воркеру выдаётся собственная identity. Все вызовы через границы модулей проходят через брокер, который записывает субъект, компонент и digest сборки в EventEnvelope и в audit; прямые вызовы в обход брокера запрещает архитектурный тест.
+    limit: >-
+      Обычный вызов функции внутри процесса следа не оставляет, поэтому атрибуция действует только на пересечении границы модуля.
+    evidence_cases: [TC-CORE-01-01]
+  - id: REQ-CORE-02
+    applicability: applicable-with-limits
+    approach: >-
+      Весь ingress и egress идёт через модуль-шлюз (membrane). Исходящие сетевые права процесса ограничены политикой уровня ОС или контейнера; `spec.boundary` genome перечисляет все точки входа, выхода и внешние зависимости.
+    limit: >-
+      Код внутри процесса может открыть сокет сам. Без egress-политики вне процесса обход шлюза возможен, и такая граница не засчитывается.
+    evidence_cases: [TC-CORE-02-01]
+  - id: REQ-CORE-03
+    applicability: applicable-with-limits
+    approach: >-
+      Подписанный манифест genome входит в релиз и проверяется при старте. Reconciler работает в отдельном процессе (supervisor): сравнивает фактические версии и конфигурацию с genome и записывает расхождения.
+    limit: >-
+      Сверка, выполняемая внутри самого наблюдаемого процесса, независимой не считается.
+    evidence_cases: [TC-CORE-03-01]
+  - id: REQ-CORE-04
+    applicability: applicable
+    approach: >-
+      Epigenome — это подписанные динамические настройки со сроком действия, загружаемые через policy-слой. Effective policy вычисляется из genome и overlays и публикуется как снимок.
+    limit: >-
+      Настройка без срока действия или без подписи (обычный feature flag) overlay не является.
+    evidence_cases: [TC-CORE-04-01]
+  - id: REQ-CORE-05
+    applicability: applicable-with-limits
+    approach: >-
+      Grants выдаёт grant service, а проверяет брокер. Модули не получают общих учётных данных процесса: секреты выдаются на вызов или на воркер, коротко живут и отзываются.
+    limit: >-
+      Модули делят память процесса и могут прочитать чужие секреты, если те хранятся внутри. Секреты держат у брокера вне модулей либо за границей процесса.
+    evidence_cases: [TC-CORE-05-01]
+  - id: REQ-CORE-06
+    applicability: applicable
+    approach: >-
+      Хранилище genome и policies находится вне процесса, запись разрешена только change service. Файловая система приложения доступна только для чтения.
+    evidence_cases: [TC-CORE-06-01]
+  - id: REQ-CORE-07
+    applicability: applicable-with-limits
+    approach: >-
+      ControlLoopSpec описывает контуры для обязательных доменов. Метрики экспортируются из процесса наружу, исполнители контуров — admission, throttling и лимиты.
+    limit: >-
+      Контур, живущий внутри процесса, умирает вместе с ним. Для домена отказа самого процесса нужен внешний контур (supervisor).
+    evidence_cases: [TC-CORE-07-01]
+  - id: REQ-CORE-08
+    applicability: applicable-with-limits
+    approach: >-
+      Единицами изоляции (cell) объявляются отдельные процессы или контейнеры-воркеры для кода, который может отказать опасно: сторонние инструменты, исполнение моделей, плагины. Остальные модули входят в основной процесс, и он честно объявляется одним failure domain.
+    limit: >-
+      Падение основного процесса — отказ организма. Модуль внутри процесса отдельным failure domain не является, и заявлять обратное нельзя. Агент, работающий внутри основного процесса, клеткой не считается: если по замыслу агенты — клетки, их запускают как воркеры.
+    evidence_cases: [TC-CORE-08-01]
+  - id: REQ-CORE-09
+    applicability: applicable
+    approach: >-
+      Сборка подписана, digest артефакта указан в genome. Данные и память допускаются только через memory gateway с source, time, integrity и classification.
+    evidence_cases: [TC-CORE-09-01]
+  - id: REQ-CORE-10
+    applicability: applicable-with-limits
+    approach: >-
+      Откат — это возврат к предыдущей подписанной версии приложения, выполняемый оркестратором или системой развёртывания вне откатываемого процесса. Миграции хранилища выполняются по схеме expand и contract.
+    limit: >-
+      Необратимые миграции хранилища — главная причина невозможного отката в монолите; каждая такая миграция требует отдельного плана containment.
+    evidence_cases: [TC-CORE-10-01]
+  - id: REQ-CORE-11
+    applicability: applicable-with-limits
+    approach: >-
+      Переходы организма и клеток публикуются как события жизненного цикла в шину и во внешний audit; валидность проверяется по канонической машине.
+    limit: >-
+      Начальные состояния организма (до `PROVISIONING`) возникают до старта процесса, их пишет система развёртывания или supervisor.
+    evidence_cases: [TC-CORE-11-01]
+  - id: REQ-CORE-12
+    applicability: applicable
+    approach: >-
+      Authority matrix и граница одобрения реализуются внешним workflow (тикет, подпись). Break-glass ограничен по времени и пишется в audit.
+    evidence_cases: [TC-CORE-12-01]
+  - id: REQ-CORE-13
+    applicability: applicable-with-limits
+    approach: >-
+      HealthEvidence собирается также снаружи: внешний probe и синтетическая транзакция проверяют correctness. Отсутствие сигнала читается как `UNKNOWN`.
+    limit: >-
+      Самоотчёт процесса независимым свидетельством не считается; ответ liveness endpoint не доказывает корректность.
+    evidence_cases: [TC-CORE-13-01]
+  - id: REQ-CORE-14
+    applicability: applicable-with-limits
+    approach: >-
+      Incident machine реализует модуль immune. Quarantine выполняется без кооперации субъекта: отзыв grants у брокера, остановка воркера, egress seal на уровне ОС или сети; для модуля в основном процессе — внешний kill switch и перезапуск процесса без него.
+    limit: >-
+      Модуль в общей памяти способен сопротивляться изоляции. Гарантированный способ — перезапуск процесса без этого модуля.
+    evidence_cases: [TC-CORE-14-01]
+  - id: REQ-CORE-15
+    applicability: applicable-with-limits
+    approach: >-
+      Apoptosis определена для единиц изоляции: воркер завершается по протоколу, закрывает endpoints, отзывает grants и эмитирует terminal record.
+    limit: >-
+      Модуль внутри процесса целиком (память, потоки) отдельно не завершается; его apoptosis — это перезапуск процесса.
+    evidence_cases: [TC-CORE-15-01]
+  - id: REQ-CORE-16
+    applicability: applicable-with-limits
+    approach: >-
+      Lease на воркер ведёт supervisor. По истечении lease воркер останавливается, grants отзываются, повторные побочные эффекты предотвращает idempotency key.
+    limit: >-
+      Supervisor должен быть отдельным процессом или службой ОС; проверка lease внутри самого процесса не засчитывается.
+    evidence_cases: [TC-CORE-16-01]
+  - id: REQ-CORE-17
+    applicability: applicable-with-limits
+    approach: >-
+      Пределы воркеров, глубины spawn и делегирования и скорости создания задаются в genome `growth_control` и применяются admission controller у supervisor или брокера; издатель и исполнитель grants — разные компоненты.
+    limit: >-
+      Потоки и асинхронные задачи внутри процесса тоже растут: нужны пределы на пулы и очереди.
+    evidence_cases: [TC-CORE-17-01]
+  - id: REQ-CORE-18
+    applicability: applicable-with-limits
+    approach: >-
+      Модуль metabolism резервирует бюджет (токены, CPU, память, деньги) до исполнения. Observed accounting (счета провайдера, метрики хоста) ведётся отдельно с источником и неопределённостью.
+    limit: >-
+      Квоты ОС принуждают только воркеры. Для модулей внутри процесса возможен учёт, но не принуждение.
+    evidence_cases: [TC-CORE-18-01]
+  - id: REQ-CORE-19
+    applicability: applicable-with-limits
+    approach: >-
+      Memory gateway — единственный путь к хранилищам памяти. Записи типизированы и содержат provenance, confidence, retention и consent; erasure проверяется.
+    limit: >-
+      В монолитной базе удаление должно покрывать реплики, кэши, индексы и резервные копии.
+    evidence_cases: [TC-CORE-19-01]
+  - id: REQ-CORE-20
+    applicability: applicable-with-limits
+    approach: >-
+      Каждый орган (модуль) объявляет допустимые режимы восстановления. Для монолита типичны RESTART, RECONFIGURE, ROLLBACK и RESTORE; REGENERATE и REBUILD выполняются сборкой из genome и подписанных источников.
+    limit: >-
+      REPLACE модуля внутри процесса означает замену всего процесса.
+    evidence_cases: [TC-CORE-20-01]
+  - id: REQ-CORE-21
+    applicability: applicable
+    approach: >-
+      AgingIndex учитывает конец поддержки зависимостей, возраст ключей, расход error budget и дрейф. Состарившийся воркер или модуль ограничивается флагом и заменяется релизом.
+    evidence_cases: [TC-CORE-21-01]
+  - id: REQ-CORE-22
+    applicability: applicable-with-limits
+    approach: >-
+      Tombstone registry и continuity records хранятся вне процесса. Restore проверяет tombstone и epoch; чужие credentials из резервной копии считаются непроверенными до проверки внешнего статуса.
+    limit: >-
+      Резервная копия монолита содержит всё состояние, поэтому процедура restore обязана перепроверять или отзывать токены и сессии.
+    evidence_cases: [TC-CORE-22-01]
+  - id: REQ-CORE-23
+    applicability: applicable-with-limits
+    approach: >-
+      Таблица покрытия F-01..F-25 заполняется с учётом монолита: часть классов (например, F-03 при единственном экземпляре) исключается письменно с обоснованием.
+    limit: >-
+      Исключение без письменного обоснования не засчитывается.
+    evidence_cases: [TC-CORE-23-01]
+  - id: REQ-CORE-24
+    applicability: applicable-with-limits
+    approach: >-
+      Audit writer пишет в append-only хранилище вне процесса; процесс не может изменить прошлые записи. Secret-scan выполняется по выборке записей.
+    limit: >-
+      Логи в stdout или в файлы той же машины, доступные процессу на запись, недостаточны.
+    evidence_cases: [TC-CORE-24-01]
+  - id: REQ-CORE-25
+    applicability: applicable-with-limits
+    approach: >-
+      Плагины и инструменты допускаются как symbionts: отдельный процесс или песочница с квотой, identity и revocation.
+    limit: >-
+      Плагин, загруженный в основной процесс (например, как библиотека), получает все права процесса и symbiont не считается.
+    evidence_cases: [TC-CORE-25-01]
+  - id: REQ-CORE-26
+    applicability: applicable
+    approach: >-
+      Вывод модели — предложение (PlanProposal). Исполнение возможно только через grant; модель подключается через adapter без прямого доступа к модулям исполнения.
+    evidence_cases: [TC-CORE-26-01]
+  - id: REQ-COND-01
+    applicability: applicable
+    approach: >-
+      Самое простое для монолита — запретить reproduction в genome (`ecology.reproduction`) и проверить запрет тестом.
+    evidence_cases: [TC-COND-01-01]
+  - id: REQ-COND-02
+    applicability: applicable
+    approach: >-
+      Федерация запрещена (`ecology.federation: none`), egress-политика не допускает соединений с другими организмами.
+    evidence_cases: [TC-COND-02-01]
+  - id: REQ-COND-03
+    applicability: applicable
+    approach: >-
+      Импорт из других lineages запрещён (`ecology.horizontal_transfer`) и принудительно проверяется на границе.
+    evidence_cases: [TC-COND-03-01]

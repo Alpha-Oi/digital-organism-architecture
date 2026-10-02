@@ -23,9 +23,9 @@
 - reference OpenTelemetry semantic conventions `doa.*`;
 - threat-model и hazard-analysis templates.
 
-## 1.3 — Implementation Profiles
+## 1.3 — Implementation Profiles (в работе)
 
-- modular-monolith profile;
+- modular-monolith profile — готов, см. `profiles/modular-monolith.md`;
 - Kubernetes/event-streaming profile;
 - edge/robotics profile;
 - air-gapped and high-assurance profile.
