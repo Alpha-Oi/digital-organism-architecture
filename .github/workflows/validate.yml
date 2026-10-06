@@ -36,6 +36,9 @@ jobs:
       - name: Validate standard and schemas
         run: python scripts/validate_repository.py
 
+      - name: Run repository tool tests
+        run: python -m unittest discover -s tests -v
+
       - name: Check whitespace errors
         run: git show --check --format= HEAD
 

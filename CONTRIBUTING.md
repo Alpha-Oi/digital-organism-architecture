@@ -41,6 +41,7 @@ Digital Organism Architecture — нормативный метаархитек�
    ```bash
    python -m pip install -r requirements-validation.txt
    python scripts/validate_repository.py
+   python -m unittest discover -s tests
    git diff --check
    ```
 
