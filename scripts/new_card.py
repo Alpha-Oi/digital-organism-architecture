@@ -30,7 +30,6 @@ CARDS = ROOT / "mechanisms/cards"
 README = ROOT / "mechanisms/README.md"
 GRAPH = ROOT / "mechanisms/interaction-graph.yaml"
 PRINCIPLES = ROOT / "mechanisms/principles.yaml"
-MAX_AUTHORS = 12
 TODO = "TODO"
 
 SKELETON = """# Карточка: {title}
@@ -94,26 +93,27 @@ def load_articles(path: Path) -> list[dict]:
     return articles
 
 
-def authors_text(authors: list[dict]) -> str:
+def authors_text(authors: list[dict], max_authors: int = 0) -> str:
+    """List every author by default, like the existing cards; `max_authors` > 0 truncates the list with "et al"."""
     names = [f"{a.get('last_name', '').strip()} {a.get('initials', '').strip()}".strip() for a in authors]
     names = [name for name in names if name]
-    if len(names) > MAX_AUTHORS:
-        return ", ".join(names[:MAX_AUTHORS]) + ", et al"
+    if max_authors and len(names) > max_authors:
+        return ", ".join(names[:max_authors]) + ", et al"
     return ", ".join(names)
 
 
 def expand_pages(pages: str) -> str:
-    """PubMed abbreviates the end page ("603-21"); write it in full ("603–621") like the existing cards."""
-    match = re.fullmatch(r"(\d+)-(\d+)", pages)
+    """PubMed abbreviates the end page ("603-21", "S243-7"); write it in full ("603–621", "S243–S247") like the existing cards."""
+    match = re.fullmatch(r"([A-Za-z]*)(\d+)-([A-Za-z]*)(\d+)", pages)
     if not match:
         return pages.replace("-", "–")
-    start, end = match.groups()
+    start_prefix, start, end_prefix, end = match.groups()
     if len(end) < len(start):
         end = start[: len(start) - len(end)] + end
-    return f"{start}–{end}"
+    return f"{start_prefix}{start}–{end_prefix or start_prefix}{end}"
 
 
-def format_source(number: int, article: dict) -> str:
+def format_source(number: int, article: dict, max_authors: int = 0) -> str:
     ids = article.get("identifiers", {})
     pmid = ids.get("pmid")
     if not pmid:
@@ -125,8 +125,8 @@ def format_source(number: int, article: dict) -> str:
     year = article.get("publication_date", {}).get("year", "")
     citation = article.get("citation", {})
     volume, issue, pages = citation.get("volume", ""), citation.get("issue", ""), citation.get("pages", "")
-    where = f"{journal}. {year}" if journal else str(year)
-    if volume:
+    where = f"{journal}. {year}" if journal and year else str(journal or year)
+    if volume and where:
         where += f";{volume}"
         if issue:
             where += f"({issue})"
@@ -136,9 +136,9 @@ def format_source(number: int, article: dict) -> str:
     if ids.get("doi"):
         links.append(f"[DOI](https://doi.org/{ids['doi']})")
     links.append(f"[PMID {pmid}](https://pubmed.ncbi.nlm.nih.gov/{pmid}/)")
-    authors = authors_text(article.get("authors", []))
-    head = f"{authors}. " if authors else ""
-    return f"{number}. {head}{title} {where}. {', '.join(links)}."
+    authors = authors_text(article.get("authors", []), max_authors)
+    parts = [f"{authors}." if authors else "", title, f"{where}." if where else ""]
+    return f"{number}. {' '.join(part for part in parts if part)} {', '.join(links)}."
 
 
 def next_principle_number() -> str:
@@ -161,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--title", required=True, help="card title in Russian, shown in the README list")
     parser.add_argument("--mechanisms", required=True, help="comma-separated mechanism ids from the registry, for example M-06,H-01")
     parser.add_argument("--sources", required=True, type=Path, help="JSON file with the PubMed get_article_metadata result")
+    parser.add_argument("--max-authors", type=int, default=0, help="truncate author lists with \"et al\" (default 0: list every author)")
     args = parser.parse_args(argv)
 
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", args.slug):
@@ -180,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("duplicate PMIDs in the sources file")
 
     table = "\n".join(f"| `{item}` {names[item]} | {TODO}: связь с карточкой |" for item in ids)
-    sources = "\n".join(format_source(number, article) for number, article in enumerate(articles, start=1))
+    sources = "\n".join(format_source(number, article, args.max_authors) for number, article in enumerate(articles, start=1))
     related = ", ".join(f"`{item}`" for item in ids)
     target.write_text(
         SKELETON.format(title=args.title, todo=TODO, related=related, table=table, sources=sources, next_principle=next_principle_number()),
