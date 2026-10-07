@@ -73,7 +73,7 @@ DOA не приложение, не agent framework, не control plane и не 
 
 ## Быстрый старт
 
-Нужны Python 3.12 (версия, на которой работает CI) и `pip`. Скрипты только читают файлы репозитория и ничего в нём не изменяют.
+Нужны Python 3.12 (версия, на которой работает CI) и `pip`. Скрипты проверки только читают файлы репозитория и ничего в нём не изменяют; единственное исключение — `scripts/new_card.py`, он создаёт заготовку карточки в `mechanisms/` (см. [`mechanisms/README.md`](mechanisms/README.md)).
 
 ```bash
 git clone https://github.com/Alpha-Oi/digital-organism-architecture.git
@@ -123,7 +123,8 @@ profiles/        профили внедрения: как выполнить т
 mechanisms/      карточки биологических механизмов, граф связей между механизмами и принципы (пилот)
 templates/       шаблоны claim, threat model и hazard analysis
 diagrams/        диаграммы Mermaid, производные от машин состояний
-scripts/         проверка стандарта, claim и отчётов
+scripts/         проверка стандарта, claim и отчётов; анализ графа механизмов; заготовка карточки
+tests/           автотесты валидатора и scripts/new_card.py
 .github/         CI, шаблоны issue и pull request, Dependabot
 ```
 
