@@ -12,6 +12,10 @@
 
 </div>
 
+<p align="center">
+  <img src="assets/doa-overview.png" width="900" alt="Обзор DOA: слои организма, жизненный цикл, восстановление, профили соответствия, ключевые числа (подписи на английском)">
+</p>
+
 **Version:** 1.5.0
 
 **Standard identifier:** `DOA-FS-1.0`
